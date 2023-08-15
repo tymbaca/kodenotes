@@ -1,0 +1,59 @@
+openapi: 3.0.1
+info:
+  title: KODE Notes
+  version: 0.1.0
+paths:
+  /notes:
+    get:
+      description: Get all notes data
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotesGet'
+
+    post:
+      description: Create new note
+      requestBody:
+        description: Content of new note
+        content:
+          appication/json:
+            schema:
+              $ref: '#/components/schemas/NoteCreate'
+      responses:
+        201:
+          description: CREATED
+          
+components:
+  schemas:
+    NotesGet:
+      type: object
+      properties:
+        notes:
+          type: array
+          items: 
+            $ref: '#/components/schemas/NoteGet'
+            
+    NoteGet:
+      type: object
+      properties:
+        id: 
+          type: integer
+        userId: 
+          type: string
+        title: 
+          type: string
+        text: 
+          type: string
+        createdAt: 
+          type: string
+    
+    NoteCreate:
+      type: object
+      properties:
+        title:
+          type: string
+        text:
+          type: string
