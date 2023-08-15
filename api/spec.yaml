@@ -15,7 +15,7 @@ paths:
                 $ref: '#/components/schemas/NotesGet'
 
     post:
-      description: Create new note
+      description: Create new note. Checks text of note in Yandex Speller
       requestBody:
         description: Content of new note
         content:
@@ -42,8 +42,6 @@ components:
         id: 
           type: integer
         userId: 
-          type: string
-        title: 
           type: string
         text: 
           type: string
