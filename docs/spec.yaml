@@ -42,7 +42,7 @@ components:
         id: 
           type: integer
         userId: 
-          type: string
+          type: integer
         text: 
           type: string
         createdAt: 
@@ -51,7 +51,5 @@ components:
     NoteCreate:
       type: object
       properties:
-        title:
-          type: string
         text:
           type: string
