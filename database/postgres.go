@@ -17,10 +17,10 @@ type PostgresDatabase struct {
 // NewPostgresDatabase creates new PostgresDatabase object and connects to PostgreSQL server.
 // Please DON'T use whitespaces and backslashes in credentials (it is possible but unwanted).
 // NEVER user tailing backslashes.
-func NewPostgresDatabase(addr, user, password, dbname string) (*PostgresDatabase, error) {
+func NewPostgresDatabase(addr, user, password string) (*PostgresDatabase, error) {
         // Details: 34.1.2 https://www.postgresql.org/docs/current/libpq-connect.html#LIBPQ-CONNSTRING
-        connStr := fmt.Sprintf("host='%s' port=5432 dbname='%s' user='%s' password='%s'",
-                addr, dbname, user, password)
+        connStr := fmt.Sprintf("host='%s' port=5432 user='%s' password='%s'",
+                addr, user, password)
         db, err := sql.Open("postgres", connStr)
         if err != nil {
                 return nil, err
