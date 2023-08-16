@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 
+	"github.com/google/uuid"
 	_ "github.com/lib/pq"
 )
 
@@ -104,9 +105,10 @@ func (s *PostgresDatabase) createNotesTable() error {
 	return nil
 }
 
-func (s *PostgresDatabase) GetNotes(userId int) NoteGetAll {
+func (s *PostgresDatabase) GetNotes(userId uuid.UUID) NoteGetAll {
+        s.Query(`SELECT * FROM notes`)
 	var notes NoteGetAll
 	return notes
 }
 
-func (s *PostgresDatabase) PostNote(userId int, note NoteCreate) {}
+func (s *PostgresDatabase) PostNote(userId uuid.UUID, note NoteCreate) {}
