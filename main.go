@@ -20,10 +20,9 @@ const (
 
 func main() {
         serverAddress := util.GetenvOrDefault(serverAddressEnvVar, ":8080")
-        pgDbNameEnvVar := util.GetenvOrDefault(pgDbNameEnvVar, "postgres")
+        pgDbName := util.GetenvOrDefault(pgDbNameEnvVar, "postgres")
 
         pgHost := util.MustGetenv(pgHostEnvVar)
-        pgDbName := util.MustGetenv(pgDbNameEnvVar)
         pgUser := util.MustGetenv(pgUserEnvVar)
         pgPassword := util.MustGetenv(pgPasswordEnvVar)
 
