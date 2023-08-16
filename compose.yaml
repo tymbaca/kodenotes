@@ -1,0 +1,17 @@
+version: "3.0"
+services:
+  kodenotes:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: ${TARGET_STAGE}
+    env_file:
+      - .env
+    depends_on:
+      - postgres
+
+  postgres:
+    image: postgres:latest
+    env_file:
+      - .env
+

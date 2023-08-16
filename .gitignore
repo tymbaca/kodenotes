@@ -22,3 +22,5 @@ go.work
 
 .env*
 __debug*
+bin
+app
