@@ -1,13 +1,20 @@
 openapi: 3.0.1
+
 info:
   title: KODE Notes
+  description: Simple note taking REST API for KODE internship
   version: 0.1.0
+  contact:
+    email: rostomyan.tm@gmail.com
+
 paths:
   /notes:
     get:
       description: Get all notes data
+      tags:
+        - notes
       responses:
-        200:
+        "200":
           description: OK
           content:
             application/json:
@@ -16,6 +23,8 @@ paths:
 
     post:
       description: Create new note. Checks text of note in Yandex Speller
+      tags:
+        - notes
       requestBody:
         description: Content of new note
         content:
@@ -23,7 +32,7 @@ paths:
             schema:
               $ref: '#/components/schemas/NoteCreate'
       responses:
-        201:
+        "201":
           description: CREATED
           
 components:
