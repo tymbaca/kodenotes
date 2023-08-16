@@ -7,12 +7,13 @@ import (
 	"github.com/tymbaca/kodenotes/api"
 	"github.com/tymbaca/kodenotes/database"
 	"github.com/tymbaca/kodenotes/spellcheck"
+	"github.com/tymbaca/kodenotes/util"
 )
 
 const (
         serverAddressEnvVar = "SERVER_ADDRESS"
+        pgHostEnvVar = "POSTGRES_HOST"
         pgDbNameEnvVar = "POSTGRES_DB"
-        pgAddressEnvVar = "POSTGRES_URL"
         pgUserEnvVar = "POSTGRES_USER"
         pgPasswordEnvVar = "POSTGRES_PASSWORD"
 )
@@ -23,28 +24,13 @@ func main() {
                 serverAddress = ":8080"
         }
 
-        pgAddress := os.Getenv(pgAddressEnvVar)
-        if pgAddress == "" {
-                log.Fatalf("set PostgreSQL address in '%s' environment variable", pgAddressEnvVar)
-        }
-
-        pgDbName := os.Getenv(pgDbNameEnvVar)
-        if pgAddress == "" {
-                log.Fatalf("set PostgreSQL database name in '%s' environment variable", pgDbNameEnvVar)
-        }
-
-        pgUser := os.Getenv(pgUserEnvVar)
-        if pgAddress == "" {
-                log.Fatalf("set PostgreSQL user in '%s' environment variable", pgUserEnvVar)
-        }
-
-        pgPassword := os.Getenv(pgPasswordEnvVar)
-        if pgAddress == "" {
-                log.Fatalf("set PostgreSQL password in '%s' environment variable", pgPasswordEnvVar)
-        }
+        pgHost := util.MustGetenv(pgHostEnvVar)
+        pgDbName := util.MustGetenv(pgDbNameEnvVar)
+        pgUser := util.MustGetenv(pgUserEnvVar)
+        pgPassword := util.MustGetenv(pgPasswordEnvVar)
 
 
-        postgres, err := database.NewPostgresDatabase(pgAddress, pgDbName, pgUser, pgPassword)
+        postgres, err := database.NewPostgresDatabase(pgHost, pgDbName, pgUser, pgPassword)
         if err != nil {
                 log.Fatal(err)
         }
