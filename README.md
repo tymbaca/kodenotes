@@ -10,7 +10,6 @@ POSTGRES_USER=myuser
 POSTGRES_PASSWORD=mypassword
 
 SERVER_ADDRESS=:8080
-POSTGRES_DB=kodenotes
 ```
 
 ### Обязательно
@@ -30,9 +29,6 @@ POSTGRES_DB=kodenotes
 
 
 ### Необязательно
-
-- `POSTGRES_DB`: (опционально) название базы данных внутри PostgreSQL. Если не указать,
-    то по умолчанию будет назначено название `postgres`
 
 - `SERVER_ADDRESS`: (опционально) адрес, который будет слушать веб-сервер. Лучше указать
 только порт в формате `:8080`. Так сервер будет слушать локальную

@@ -10,27 +10,27 @@ import (
 )
 
 const (
-        serverAddressEnvVar = "SERVER_ADDRESS"
-        pgHostEnvVar = "POSTGRES_HOST"
-        pgUserEnvVar = "POSTGRES_USER"
-        pgPasswordEnvVar = "POSTGRES_PASSWORD"
+	serverAddressEnvVar = "SERVER_ADDRESS"
+	pgHostEnvVar        = "POSTGRES_HOST"
+	pgUserEnvVar        = "POSTGRES_USER"
+	pgPasswordEnvVar    = "POSTGRES_PASSWORD"
 )
 
 func main() {
-        serverAddress := util.GetenvOrDefault(serverAddressEnvVar, ":8080")
+	serverAddress := util.GetenvOrDefault(serverAddressEnvVar, ":8080")
 
-        pgHost := util.MustGetenv(pgHostEnvVar)
-        pgUser := util.MustGetenv(pgUserEnvVar)
-        pgPassword := util.MustGetenv(pgPasswordEnvVar)
+	pgHost := util.MustGetenv(pgHostEnvVar)
+	// pgUser := util.MustGetenv(pgUserEnvVar)
+	pgPassword := util.MustGetenv(pgPasswordEnvVar)
 
+	postgres, err := database.NewPostgresDatabase(pgHost, pgPassword)
+	if err != nil {
+		log.Fatal(err)
+	}
 
-        postgres, err := database.NewPostgresDatabase(pgHost, pgUser, pgPassword)
-        if err != nil {
-                log.Fatal(err)
-        }
+	yandexSpeller := spellcheck.NewYandexSpeller()
+	server := api.NewServer(serverAddress, postgres, yandexSpeller)
 
-        yandexScpeller := spellcheck.NewYandexSpeller()
-        server := api.NewServer(serverAddress, postgres, yandexScpeller)
-
-        log.Fatal(server.Start())
+	log.Printf("server running on address: %s", serverAddress)
+	log.Fatal(server.Start())
 }
