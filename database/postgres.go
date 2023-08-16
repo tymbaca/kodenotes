@@ -1,20 +1,38 @@
 package database
 
 import (
-        // "github.com/jackc/pgx/v5"
+	"database/sql"
+	"fmt"
+
+	_ "github.com/lib/pq"
 )
 
-// PostgresDatabase implements Database interface. Connects to 
+// "github.com/jackc/pgx/v5"
+
+// PostgresDatabase implements Database interface. Connects to
 type PostgresDatabase struct {
-        addr            string
-        user            string
-        password        string
+        *sql.DB
 }
 
-func NewPostgresDatabase(addr, user, password string) *PostgresDatabase {
-        db := &PostgresDatabase{addr: addr, user: user, password: password}
-        // Maybe need to add ping and return error if db is down
-        return db
+// NewPostgresDatabase creates new PostgresDatabase object and connects to PostgreSQL server.
+// Please DON'T use whitespaces and backslashes in credentials (it is possible but unwanted).
+// NEVER user tailing backslashes.
+func NewPostgresDatabase(addr, user, password, dbname string) (*PostgresDatabase, error) {
+        // Details: 34.1.2 https://www.postgresql.org/docs/current/libpq-connect.html#LIBPQ-CONNSTRING
+        connStr := fmt.Sprintf("host='%s' port=5432 dbname='%s' user='%s' password='%s'",
+                addr, dbname, user, password)
+        db, err := sql.Open("postgres", connStr)
+        if err != nil {
+                return nil, err
+        }
+
+        err = db.Ping()
+        if err != nil {
+                return nil, err
+        }
+
+        pg := &PostgresDatabase{db}
+        return pg, nil
 }
 
 func (s *PostgresDatabase) GetNotes(userId int) NoteGetAll {
