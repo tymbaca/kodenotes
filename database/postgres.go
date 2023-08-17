@@ -46,12 +46,12 @@ func (s *PostgresDatabase) init() error {
 		return err
 	}
 
-	err = s.createNotesTable()
-	if err != nil {
-		return err
-	}
+        err = s.createUsersTable()
+        if err != nil {
+                return err
+        }
 
-	err = s.createUsersTable()
+	err = s.createNotesTable()
 	if err != nil {
 		return err
 	}

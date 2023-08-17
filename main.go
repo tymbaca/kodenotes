@@ -12,7 +12,6 @@ import (
 const (
 	serverAddressEnvVar = "SERVER_ADDRESS"
 	pgHostEnvVar        = "POSTGRES_HOST"
-	pgUserEnvVar        = "POSTGRES_USER"
 	pgPasswordEnvVar    = "POSTGRES_PASSWORD"
 )
 
@@ -20,7 +19,6 @@ func main() {
 	serverAddress := util.GetenvOrDefault(serverAddressEnvVar, ":8080")
 
 	pgHost := util.MustGetenv(pgHostEnvVar)
-	// pgUser := util.MustGetenv(pgUserEnvVar)
 	pgPassword := util.MustGetenv(pgPasswordEnvVar)
 
 	postgres, err := database.NewPostgresDatabase(pgHost, pgPassword)
