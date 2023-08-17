@@ -20,6 +20,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/NotesGet'
+        "401":
+          description: Unauthorized
 
     post:
       description: Create new note. Checks text of note in Yandex Speller
@@ -34,6 +36,10 @@ paths:
       responses:
         "201":
           description: CREATED
+        "401":
+          description: Unauthorized
+        "413":
+          description: Payload Too Large
           
 components:
   schemas:
