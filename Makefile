@@ -3,6 +3,11 @@ run:
 	export POSTGRES_PASSWORD=mypassword &&\
 	go run main.go
 
+test:
+	export POSTGRES_HOST=localhost &&\
+	export POSTGRES_PASSWORD=mypassword &&\
+	go test ./...
+
 compose-run:
 	export TARGET_STAGE=run &&\
 	docker compose up --build

@@ -25,6 +25,11 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+        err = postgres.Init()
+	if err != nil {
+		log.Fatal(err)
+	}
+
 
 	yandexSpeller := spellcheck.NewYandexSpeller()
 	server := api.NewServer(serverAddress, postgres, yandexSpeller)

@@ -3,6 +3,7 @@ package database
 import (
 	"database/sql"
 	"fmt"
+	"time"
 
 	"github.com/google/uuid"
 	_ "github.com/lib/pq"
@@ -32,44 +33,40 @@ func NewPostgresDatabase(host, password string) (*PostgresDatabase, error) {
 
 	pg := &PostgresDatabase{db}
 
-	err = pg.init()
-	if err != nil {
-		return nil, err
-	}
-
 	return pg, nil
 }
 
-func (s *PostgresDatabase) init() error {
-        err := s.addUuidExtension()
+func (d *PostgresDatabase) Init() error {
+        err := d.addUuidExtension()
 	if err != nil {
 		return err
 	}
 
-        err = s.createUsersTable()
+        err = d.createUsersTable()
         if err != nil {
                 return err
         }
 
-        err = s.createSessionsTable()
+        err = d.createSessionsTable()
         if err != nil {
                 return err
         }
 
-	err = s.createNotesTable()
+	err = d.createNotesTable()
 	if err != nil {
 		return err
 	}
 
         // goroutine for scheduled session deleting here
+        go d.loopCleanExpiredSessions(30 * 24 * time.Hour, 1 * 24 * time.Hour)
 
 	return nil
 }
 
-func (s *PostgresDatabase) addUuidExtension() error {
+func (d *PostgresDatabase) addUuidExtension() error {
 	query := `CREATE EXTENSION IF NOT EXISTS "uuid-ossp";`
 
-	_, err := s.Exec(query)
+	_, err := d.Exec(query)
 	if err != nil {
 		return err
 	}
@@ -77,41 +74,42 @@ func (s *PostgresDatabase) addUuidExtension() error {
         
 }
 
-func (s *PostgresDatabase) createUsersTable() error {
+func (d *PostgresDatabase) createUsersTable() error {
 	query := `
         CREATE TABLE IF NOT EXISTS users (
-                id              UUID DEFAULT uuid_generate_v1(),
+                id              UUID DEFAULT uuid_generate_v4(),
                 username        VARCHAR(250) NOT NULL,
                 password        VARCHAR(250) NOT NULL,
 
                 PRIMARY KEY (id)
         );`
 
-	_, err := s.Exec(query)
+	_, err := d.Exec(query)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (s *PostgresDatabase) createSessionsTable() error {
+func (d *PostgresDatabase) createSessionsTable() error {
 	query := `
         CREATE TABLE IF NOT EXISTS sessions (
-                id      UUID DEFAULT uuid_generate_v1(),
-                user_id UUID NOT NULL,
+                id              UUID DEFAULT uuid_generate_v1(),
+                user_id         UUID NOT NULL,
+                last_used_at      TIMESTAMP NOT NULL DEFAULT current_timestamp,
 
                 PRIMARY KEY (id),
                 CONSTRAINT fk_session_user FOREIGN KEY (user_id) REFERENCES users(id)
         );`
 
-	_, err := s.Exec(query)
+	_, err := d.Exec(query)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (s *PostgresDatabase) createNotesTable() error {
+func (d *PostgresDatabase) createNotesTable() error {
 	query := `
         CREATE TABLE IF NOT EXISTS notes (
                 id      UUID DEFAULT uuid_generate_v1(),
@@ -122,19 +120,29 @@ func (s *PostgresDatabase) createNotesTable() error {
                 CONSTRAINT fk_note_user FOREIGN KEY (user_id) REFERENCES "users"(id)
         );`
 
-	_, err := s.Exec(query)
+	_, err := d.Exec(query)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
+func (d *PostgresDatabase) loopCleanExpiredSessions(expireTime, interval time.Duration) {
+        for {
+                query := `DELETE 
+                FROM sessions 
+                WHERE (current_timestamp - last_used_at) < $1`
+                d.Exec(query, expireTime)
 
+                time.Sleep(interval)
+        }
 
-func (s *PostgresDatabase) GetNotes(userId uuid.UUID) NoteGetAll {
-        s.Query(`SELECT * FROM notes`)
+}
+
+func (d *PostgresDatabase) GetNotes(userId uuid.UUID) NoteGetAll {
+        d.Query(`SELECT * FROM notes`)
 	var notes NoteGetAll
 	return notes
 }
 
-func (s *PostgresDatabase) PostNote(userId uuid.UUID, note NoteCreate) {}
+func (d *PostgresDatabase) PostNote(userId uuid.UUID, note NoteCreate) {}
