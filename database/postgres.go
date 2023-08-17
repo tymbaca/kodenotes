@@ -3,10 +3,12 @@ package database
 import (
 	"database/sql"
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/google/uuid"
 	_ "github.com/lib/pq"
+	"github.com/sanyokbig/pqinterval"
 )
 
 // "github.com/jackc/pgx/v5"
@@ -37,28 +39,28 @@ func NewPostgresDatabase(host, password string) (*PostgresDatabase, error) {
 }
 
 func (d *PostgresDatabase) Init() error {
-        err := d.addUuidExtension()
+	err := d.addUuidExtension()
 	if err != nil {
 		return err
 	}
 
-        err = d.createUsersTable()
-        if err != nil {
-                return err
-        }
+	err = d.createUsersTable()
+	if err != nil {
+		return err
+	}
 
-        err = d.createSessionsTable()
-        if err != nil {
-                return err
-        }
+	err = d.createSessionsTable()
+	if err != nil {
+		return err
+	}
 
 	err = d.createNotesTable()
 	if err != nil {
 		return err
 	}
 
-        // goroutine for scheduled session deleting here
-        go d.loopCleanExpiredSessions(30 * 24 * time.Hour, 1 * 24 * time.Hour)
+	// goroutine for scheduled session deleting here
+	go d.loopCleanExpiredSessions(30*24*time.Hour, 1*24*time.Hour)
 
 	return nil
 }
@@ -71,9 +73,11 @@ func (d *PostgresDatabase) addUuidExtension() error {
 		return err
 	}
 	return nil
-        
+
 }
 
+// createUsersTable creates users table in PostgreSQL.
+// DEPENDS on d.addUuidExtension().
 func (d *PostgresDatabase) createUsersTable() error {
 	query := `
         CREATE TABLE IF NOT EXISTS users (
@@ -91,6 +95,8 @@ func (d *PostgresDatabase) createUsersTable() error {
 	return nil
 }
 
+// createSessionsTable creates users table in PostgreSQL.
+// DEPENDS on d.addUuidExtension() and d.createUsersTable().
 func (d *PostgresDatabase) createSessionsTable() error {
 	query := `
         CREATE TABLE IF NOT EXISTS sessions (
@@ -127,20 +133,25 @@ func (d *PostgresDatabase) createNotesTable() error {
 	return nil
 }
 
-func (d *PostgresDatabase) loopCleanExpiredSessions(expireTime, interval time.Duration) {
-        for {
-                query := `DELETE 
+// NOT WORKING
+func (d *PostgresDatabase) loopCleanExpiredSessions(expireDuration, interval time.Duration) {
+	for {
+		var expireDurationPg pqinterval.Duration = pqinterval.Duration(expireDuration)
+		query := `DELETE 
                 FROM sessions 
                 WHERE (current_timestamp - last_used_at) < $1`
-                d.Exec(query, expireTime)
+		_, err := d.Exec(query, expireDurationPg)
+		if err != nil {
+			log.Println(err.Error())
+		}
 
-                time.Sleep(interval)
-        }
+		time.Sleep(interval)
+	}
 
 }
 
 func (d *PostgresDatabase) GetNotes(userId uuid.UUID) NoteGetAll {
-        d.Query(`SELECT * FROM notes`)
+	d.Query(`SELECT * FROM notes`)
 	var notes NoteGetAll
 	return notes
 }
