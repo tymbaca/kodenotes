@@ -3,12 +3,9 @@ package database
 import (
 	"database/sql"
 	"fmt"
-	"log"
-	"time"
 
 	"github.com/google/uuid"
 	_ "github.com/lib/pq"
-	"github.com/sanyokbig/pqinterval"
 )
 
 // "github.com/jackc/pgx/v5"
@@ -49,18 +46,10 @@ func (d *PostgresDatabase) Init() error {
 		return err
 	}
 
-	err = d.createSessionsTable()
-	if err != nil {
-		return err
-	}
-
 	err = d.createNotesTable()
 	if err != nil {
 		return err
 	}
-
-	// goroutine for scheduled session deleting here
-	go d.loopCleanExpiredSessions(30*24*time.Hour, 1*24*time.Hour)
 
 	return nil
 }
@@ -102,7 +91,7 @@ func (d *PostgresDatabase) createSessionsTable() error {
         CREATE TABLE IF NOT EXISTS sessions (
                 id              UUID DEFAULT uuid_generate_v1(),
                 user_id         UUID NOT NULL,
-                last_used_at      TIMESTAMP NOT NULL DEFAULT current_timestamp,
+                last_used_at    TIMESTAMP NOT NULL DEFAULT current_timestamp,
 
                 PRIMARY KEY (id),
                 CONSTRAINT fk_session_user FOREIGN KEY (user_id) REFERENCES users(id)
@@ -131,23 +120,6 @@ func (d *PostgresDatabase) createNotesTable() error {
 		return err
 	}
 	return nil
-}
-
-// NOT WORKING
-func (d *PostgresDatabase) loopCleanExpiredSessions(expireDuration, interval time.Duration) {
-	for {
-		var expireDurationPg pqinterval.Duration = pqinterval.Duration(expireDuration)
-		query := `DELETE 
-                FROM sessions 
-                WHERE (current_timestamp - last_used_at) < $1`
-		_, err := d.Exec(query, expireDurationPg)
-		if err != nil {
-			log.Println(err.Error())
-		}
-
-		time.Sleep(interval)
-	}
-
 }
 
 func (d *PostgresDatabase) GetNotes(userId uuid.UUID) NoteGetAll {
