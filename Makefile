@@ -1,4 +1,4 @@
-run:
+run: 
 	export POSTGRES_HOST=localhost &&\
 	export POSTGRES_PASSWORD=mypassword &&\
 	go run main.go

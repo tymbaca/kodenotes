@@ -51,10 +51,17 @@ func (s *PostgresDatabase) init() error {
                 return err
         }
 
+        err = s.createSessionsTable()
+        if err != nil {
+                return err
+        }
+
 	err = s.createNotesTable()
 	if err != nil {
 		return err
 	}
+
+        // goroutine for scheduled session deleting here
 
 	return nil
 }
@@ -87,15 +94,14 @@ func (s *PostgresDatabase) createUsersTable() error {
 	return nil
 }
 
-func (s *PostgresDatabase) createNotesTable() error {
+func (s *PostgresDatabase) createSessionsTable() error {
 	query := `
-        CREATE TABLE IF NOT EXISTS notes (
+        CREATE TABLE IF NOT EXISTS sessions (
                 id      UUID DEFAULT uuid_generate_v1(),
-                user_id UUID,
-                text    TEXT,
+                user_id UUID NOT NULL,
 
                 PRIMARY KEY (id),
-                CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES "users"(id)
+                CONSTRAINT fk_session_user FOREIGN KEY (user_id) REFERENCES users(id)
         );`
 
 	_, err := s.Exec(query)
@@ -104,6 +110,26 @@ func (s *PostgresDatabase) createNotesTable() error {
 	}
 	return nil
 }
+
+func (s *PostgresDatabase) createNotesTable() error {
+	query := `
+        CREATE TABLE IF NOT EXISTS notes (
+                id      UUID DEFAULT uuid_generate_v1(),
+                user_id UUID,
+                text    TEXT,
+
+                PRIMARY KEY (id),
+                CONSTRAINT fk_note_user FOREIGN KEY (user_id) REFERENCES "users"(id)
+        );`
+
+	_, err := s.Exec(query)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+
 
 func (s *PostgresDatabase) GetNotes(userId uuid.UUID) NoteGetAll {
         s.Query(`SELECT * FROM notes`)
