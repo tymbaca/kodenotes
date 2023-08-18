@@ -18,8 +18,10 @@ const (
 )
 
 var (
+        ErrYandexTooBigText = errors.New("text is too big: pass text with less than 10_000 characters")
+
         yandexSpellerUrl = os.Getenv(yandexSpellerUrlEnvVar)
-        yandexResponseTimeout = util.GetenvOrDefault("YANDEX_SPELLER_TIMEOUT", "10")
+        yandexResponseTimeout = util.GetenvIntOrDefault("YANDEX_SPELLER_TIMEOUT", 10)
 )
 
 type ResponseWrapper struct {
@@ -36,19 +38,22 @@ func NewYandexSpeller() *YandexSpeller {
 
 // Check sends text to Yandex.Speller (https://yandex.ru/dev/speller) to check it for spelling mistakes. 
 // Returns: 
-//      - true, nil, nil - if text is correct
-//      - false, CheckResponse, nil - if spelling mistake found
-//      - false, nil, error - if unexcpected error accured durring the request
+//      - CheckResponse, nil - if spelling mistake found
+//      - nil, error - if unexcpected error accured during the request. Error can be ErrTooBigText or another.
 //
 func (y *YandexSpeller) Check(text string) (CheckResponse, error) {
 
         if len(text) >= 10_000 {
-                return false, nil, errors.New("final url with text is too big: pass smaller text")
+                return nil, ErrYandexTooBigText
         }
+
         var formData url.Values
         formData.Add("text", text)
 
-
+        resp, err := fetchCheckData(formData)
+        if err != nil {
+                return nil, err
+        }
         
         data, err := io.ReadAll(resp.Body)
         if err != nil {
@@ -62,11 +67,12 @@ func (y *YandexSpeller) Check(text string) (CheckResponse, error) {
                 return nil, err
         }
 
-        return 
+        return checkResponse, nil
 }
 
-func checkData(formData url.Values) (*http.Response, error) {
-        ctx, cancel := context.WithTimeout(context.Background(), yandexResponseTimeout * time.Second)
+func fetchCheckData(formData url.Values) (*http.Response, error) {
+        ctx, cancel := context.WithTimeout(context.Background(), time.Duration(yandexResponseTimeout) * time.Second)
+        defer cancel()
         respWrapCh      := make(chan ResponseWrapper)
 
         go func() {
@@ -77,7 +83,7 @@ func checkData(formData url.Values) (*http.Response, error) {
         for {
                 select {
                 case <-ctx.Done():
-                        return nil, http.ErrHandlerTimeout
+                        return nil, ErrCheckTimeout
                 case respWrap := <-respWrapCh:
                         return respWrap.resp, respWrap.err
                 }
