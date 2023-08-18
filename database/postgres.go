@@ -2,12 +2,14 @@ package database
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 
 	"github.com/google/uuid"
 	_ "github.com/lib/pq"
 )
 
+var ErrUsernameExists = errors.New("username already exists")
 
 // PostgresDatabase implements Database interface. Connects to
 type PostgresDatabase struct {

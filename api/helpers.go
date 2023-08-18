@@ -29,6 +29,7 @@ func (s *Server) getUserId(r *http.Request) uuid.NullUUID {
         }
         hashedPassword := hashString(password)
         creds := database.UserSecureCredentials{Username: username, Password: hashedPassword}
+
         id := s.db.GetUserId(creds)
         return id
 }

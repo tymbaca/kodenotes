@@ -3,11 +3,11 @@ package api
 import (
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 
 	"github.com/google/uuid"
 	"github.com/tymbaca/kodenotes/database"
+	"github.com/tymbaca/kodenotes/spellcheck"
 )
 
 func (s *Server) handleNotes(w http.ResponseWriter, r *http.Request) {
@@ -36,11 +36,14 @@ func (s *Server) handleNotes(w http.ResponseWriter, r *http.Request) {
 
 
 func (s *Server) handleGetNotes(w http.ResponseWriter, r *http.Request, userId uuid.UUID) {
-        notes := s.db.GetNotes(userId)
+        notes, err := s.db.GetNotes(userId)
+        if err != nil {
+                http.Error(w, err.Error(), http.StatusInternalServerError)
+        }
 
         w.Header().Set("Content-Type", "application/json")
 
-        err := json.NewEncoder(w).Encode(notes)
+        err = json.NewEncoder(w).Encode(notes)
         if err != nil {
                 http.Error(w, err.Error(), http.StatusInternalServerError)
         }
@@ -55,14 +58,22 @@ func (s *Server) handlePostNote(w http.ResponseWriter, r *http.Request, userId u
         }
 
         result, err := s.spellschecker.Check(note.Text)
+        if err == spellcheck.ErrYandexTooBigText {
+                http.Error(w, err.Error(), http.StatusRequestEntityTooLarge)
+        }
         if err != nil {
-                http.Error(w, "spellchecker not responding", http.StatusGatewayTimeout)
+                
         }
         
         if len(result) > 0 {
                 // Bad text
+                // TODO: return spellschecker response
         } else if len(result) == 0 {
                 // Good text
+                err = s.db.PostNote(userId, note)
+                if err != nil {
+                        http.Error(w, "bad credentials, make sure your username and password are less than 250 chars", http.StatusBadRequest)
+                }
         } else {
                 http.Error(w, "i am a teapot", http.StatusTeapot)
         }
