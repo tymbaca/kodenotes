@@ -2,7 +2,9 @@
 Для общения с PostgreSQL используется стандартный пакет `database/sql` с драйвером
 `github.com/lib/pq`.
 
-Аутентификация базовая (Basic Auth). 
+Аутентификация базовая (Basic Auth). Пароли хранятся в базе данных в зашифрованном 
+виде (1 итерация, SHA-256), без соли.
+
 В Яндекс.Спеллер запросы отправляются методом POST. По документации серсива, 
 максимальный размер текста в это случае составляет 10_000 символов. API будет 
 возвращаться ошибку `413 Payload Too Large`, если текст превышает это ограничение.
@@ -15,10 +17,12 @@
 ```
 POSTGRES_HOST=postgres
 POSTGRES_PASSWORD=mypassword
+YANDEX_SPELLER_URL=https://speller.yandex.net/services/spellservice.json/checkText
 
 TARGET_STAGE=run
 
 SERVER_ADDRESS=:8080
+YANDEX_SPELLER_TIMEOUT=10
 ```
 
 ### Обязательно
@@ -27,6 +31,9 @@ SERVER_ADDRESS=:8080
   необходимо указать название сервиса с PostgreSQL (из `compose.yaml` файла).
 
 - `POSTGRES_PASSWORD`: пароль пользователя для соединения с PostgreSQL. 
+
+- `YANDEX_SPELLER_URL`: URL API Яндекс.Спеллер, который принимает POST запросы. 
+  На момент создания программы корректный URL - `https://speller.yandex.net/services/spellservice.json/checkText`
 
 - `TARGET_STAGE`: `[ run | test ]` целевой этап сборки `Dockerfile`а. Используется в 
 `compose.yaml`. `run` полноценно запустит веб-сервер. `test` запустит тесты.
@@ -40,6 +47,9 @@ SERVER_ADDRESS=:8080
 - `SERVER_ADDRESS`: адрес, который будет слушать веб-сервер. Лучше указать
 только порт в формате `:8080`. Так сервер будет слушать локальную
 сеть (0.0.0.0) с указанным портом.
+
+- `YANDEX_SPELLER_TIMEOUT`: время в секундах, после которого запрос на сервер Яндекс.Спеллер
+  отменяется.
 
 ## Трудности
 При интеграции с Яндекс.Спеллер возникла проблема: в документации нигде не указано 

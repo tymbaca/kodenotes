@@ -2,6 +2,11 @@ package database
 
 import "github.com/google/uuid"
 
+type UserSecureCredentials struct {
+        Username string
+        Password string
+}
+
 type NoteModel struct {
         Id      uuid.UUID
         UserId  uuid.UUID

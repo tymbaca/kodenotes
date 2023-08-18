@@ -84,24 +84,16 @@ func (d *PostgresDatabase) createUsersTable() error {
 	return nil
 }
 
-// createSessionsTable creates users table in PostgreSQL.
-// DEPENDS on d.addUuidExtension() and d.createUsersTable().
-func (d *PostgresDatabase) createSessionsTable() error {
-	query := `
-        CREATE TABLE IF NOT EXISTS sessions (
-                id              UUID DEFAULT uuid_generate_v1(),
-                user_id         UUID NOT NULL,
-                last_used_at    TIMESTAMP NOT NULL DEFAULT current_timestamp,
+func (d *PostgresDatabase) CreateUser(username, password string) error 
 
-                PRIMARY KEY (id),
-                CONSTRAINT fk_session_user FOREIGN KEY (user_id) REFERENCES users(id)
-        );`
-
-	_, err := d.Exec(query)
-	if err != nil {
-		return err
-	}
-	return nil
+func (d *PostgresDatabase) GetUserId(creds UserSecureCredentials) uuid.NullUUID {
+        var result uuid.NullUUID
+        err := d.QueryRow("SELECT id FROM users WHERE username = $1 AND password = $2").Scan(&result)
+        if err != nil || !result.Valid {
+                return uuid.NullUUID{Valid: false}
+        } else {
+                return result
+        }
 }
 
 func (d *PostgresDatabase) createNotesTable() error {
@@ -121,6 +113,8 @@ func (d *PostgresDatabase) createNotesTable() error {
 	}
 	return nil
 }
+
+
 
 func (d *PostgresDatabase) GetNotes(userId uuid.UUID) NoteGetAll {
 	d.Query(`SELECT * FROM notes`)
