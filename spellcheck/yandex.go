@@ -1,12 +1,16 @@
 package spellcheck
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"io"
 	"net/http"
 	"net/url"
 	"os"
+	"time"
+
+	"github.com/tymbaca/kodenotes/util"
 )
 
 const (
@@ -15,7 +19,13 @@ const (
 
 var (
         yandexSpellerUrl = os.Getenv(yandexSpellerUrlEnvVar)
+        yandexResponseTimeout = util.GetenvOrDefault("YANDEX_SPELLER_TIMEOUT", "10")
 )
+
+type ResponseWrapper struct {
+        resp *http.Response
+        err   error
+}
 
 type YandexSpeller struct {}
 
@@ -30,37 +40,48 @@ func NewYandexSpeller() *YandexSpeller {
 //      - false, CheckResponse, nil - if spelling mistake found
 //      - false, nil, error - if unexcpected error accured durring the request
 //
-// WARNING: Yandex.Speller is not working correctly via POST method. 
-// Need to use GET method with 10KB URL limitaion (with text path parameter included)
-//
-func (y *YandexSpeller) Check(text string) (bool, CheckResponse, error) {
-        urlWithText := yandexSpellerUrl + "?text=" + url.QueryEscape(text)
+func (y *YandexSpeller) Check(text string) (CheckResponse, error) {
 
-        if len(urlWithText) >= 10_000 {
+        if len(text) >= 10_000 {
                 return false, nil, errors.New("final url with text is too big: pass smaller text")
         }
+        var formData url.Values
+        formData.Add("text", text)
 
-        resp, err := http.Get(urlWithText)
-        if err != nil {
-                return false, nil, err
-        }
+
         
         data, err := io.ReadAll(resp.Body)
         if err != nil {
-                return false, nil, err
+                return nil, err
         }
 
         var checkResponse CheckResponse
 
         err = json.Unmarshal(data, &checkResponse)
         if err != nil {
-                return false, nil, err
+                return nil, err
         }
 
+        return 
+}
 
-        if len(checkResponse) == 0 {
-                return true, nil, nil
-        } else {
-                return false, checkResponse, nil
+func checkData(formData url.Values) (*http.Response, error) {
+        ctx, cancel := context.WithTimeout(context.Background(), yandexResponseTimeout * time.Second)
+        respWrapCh      := make(chan ResponseWrapper)
+
+        go func() {
+                resp, err := http.PostForm(yandexSpellerUrl, formData)
+                respWrapCh <- ResponseWrapper{resp: resp, err: err}
+        }()
+        
+        for {
+                select {
+                case <-ctx.Done():
+                        return nil, http.ErrHandlerTimeout
+                case respWrap := <-respWrapCh:
+                        return respWrap.resp, respWrap.err
+                }
+
         }
 }
+

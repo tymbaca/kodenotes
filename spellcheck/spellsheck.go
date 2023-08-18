@@ -1,7 +1,8 @@
 package spellcheck
 
+// Returns error if spellchecker service is not responding 
 type SpellChecker interface {
-        Check(text string) (bool, CheckResponse, error)
+        Check(text string) (CheckResponse, error)
 }
 
 type CheckResponse []MisspellInfo
