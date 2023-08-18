@@ -45,6 +45,26 @@ func TestGetenvOrDefault(t *testing.T) {
         }
 }
 
+func TestGetenvIntOrDefault(t *testing.T) {
+        os.Setenv("TEST", "10")
+        os.Setenv("NOT_INT", "myname")
+
+        val := GetenvIntOrDefault("TEST", 20)
+        if val != 10 {
+                t.FailNow()
+        }
+        
+        val = GetenvIntOrDefault("NOT_INT", 20)
+        if val != 20 {
+                t.FailNow()
+        }
+
+        val = GetenvIntOrDefault("NOT_EXIST", 20)
+        if val != 20 {
+                t.FailNow()
+        }
+}
+
 func recoverMustPanic(t *testing.T) {
         if r := recover(); r == nil {
                 // Panic not found -> Fail

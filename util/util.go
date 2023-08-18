@@ -3,6 +3,7 @@ package util
 import (
 	"log"
 	"os"
+	"strconv"
 )
 
 func MustGetenv(key string) string {
@@ -27,4 +28,16 @@ func GetenvOrDefault(key, def string) string {
 		val = def
 	}
 	return val
+}
+
+func GetenvIntOrDefault(key string, def int) int {
+        val := os.Getenv(key)
+        if val == "" {
+                return def
+        }
+        valInt, err := strconv.Atoi(val)
+        if err != nil {
+                return def
+        } 
+        return valInt 
 }
