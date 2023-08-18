@@ -8,7 +8,6 @@ import (
 	_ "github.com/lib/pq"
 )
 
-// "github.com/jackc/pgx/v5"
 
 // PostgresDatabase implements Database interface. Connects to
 type PostgresDatabase struct {
@@ -71,7 +70,7 @@ func (d *PostgresDatabase) createUsersTable() error {
 	query := `
         CREATE TABLE IF NOT EXISTS users (
                 id              UUID DEFAULT uuid_generate_v4(),
-                username        VARCHAR(250) NOT NULL,
+                username        VARCHAR(250) NOT NULL UNIQUE,
                 password        VARCHAR(250) NOT NULL,
 
                 PRIMARY KEY (id)
@@ -85,6 +84,15 @@ func (d *PostgresDatabase) createUsersTable() error {
 }
 
 // func (d *PostgresDatabase) CreateUser(username, password string) error {}
+func (d *PostgresDatabase) RegisterUser(creds UserSecureCredentials) (uuid.UUID, error) {
+        var userId uuid.UUID
+	err := d.QueryRow("INSERT INTO users (username, password) VALUES ($1, $2) RETURNING id;", 
+                          creds.Username, creds.Password).Scan(&userId)
+        if err != nil {
+                return uuid.UUID{}, err
+        }
+        return userId, nil
+}
 
 func (d *PostgresDatabase) GetUserId(creds UserSecureCredentials) uuid.NullUUID {
 	var result uuid.NullUUID

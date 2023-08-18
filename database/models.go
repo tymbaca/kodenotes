@@ -7,6 +7,12 @@ type UserSecureCredentials struct {
         Password string
 }
 
+type User struct {
+        Id       uuid.UUID
+        Username string
+        Password string
+}
+
 type NoteModel struct {
         Id      uuid.UUID
         UserId  uuid.UUID
