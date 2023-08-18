@@ -84,16 +84,16 @@ func (d *PostgresDatabase) createUsersTable() error {
 	return nil
 }
 
-func (d *PostgresDatabase) CreateUser(username, password string) error 
+// func (d *PostgresDatabase) CreateUser(username, password string) error {}
 
 func (d *PostgresDatabase) GetUserId(creds UserSecureCredentials) uuid.NullUUID {
-        var result uuid.NullUUID
-        err := d.QueryRow("SELECT id FROM users WHERE username = $1 AND password = $2").Scan(&result)
-        if err != nil || !result.Valid {
-                return uuid.NullUUID{Valid: false}
-        } else {
-                return result
-        }
+	var result uuid.NullUUID
+	err := d.QueryRow("SELECT id FROM users WHERE username = $1 AND password = $2").Scan(&result)
+	if err != nil || !result.Valid {
+		return uuid.NullUUID{Valid: false}
+	} else {
+		return result
+	}
 }
 
 func (d *PostgresDatabase) createNotesTable() error {
@@ -114,12 +114,36 @@ func (d *PostgresDatabase) createNotesTable() error {
 	return nil
 }
 
+func (d *PostgresDatabase) GetNotes(userId uuid.UUID) (NoteGetAll, error) {
+	var result NoteGetAll
 
+	rows, err := d.Query(`SELECT id, user_id, text FROM notes WHERE user_id = $1;`, userId)
+	if err != nil {
+		return NoteGetAll{}, err
+	}
+	defer rows.Close()
 
-func (d *PostgresDatabase) GetNotes(userId uuid.UUID) NoteGetAll {
-	d.Query(`SELECT * FROM notes`)
-	var notes NoteGetAll
-	return notes
+	for rows.Next() {
+		var note NoteGet
+		err = rows.Scan(&note.Id,
+			&note.UserId,
+			&note.Text)
+		if err != nil {
+			return NoteGetAll{}, err
+		}
+
+		result.Notes = append(result.Notes, note)
+	}
+
+	return result, nil
 }
 
-func (d *PostgresDatabase) PostNote(userId uuid.UUID, note NoteCreate) {}
+func (d *PostgresDatabase) PostNote(userId uuid.UUID, note NoteCreate) error {
+	_, err := d.Exec(`INSERT INTO notes (user_id, text) VALUES ($1, $2);`,
+		userId, note.Text)
+	// It also detects if userId not present in table users
+	if err != nil {
+		return err
+	}
+	return nil
+}

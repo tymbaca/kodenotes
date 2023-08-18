@@ -38,6 +38,101 @@ func clearDb() {
 	}
 }
 
+func TestGetNotes(t *testing.T) {
+	clearDb()
+	// FOREPLAY
+	db, err := NewPostgresDatabase(host, password)
+	if err != nil {
+		panic(err)
+	}
+	err = db.Init()
+	if err != nil {
+		panic(err)
+	}
+
+	if mustCountTable(db, "users") != 0 || mustCountTable(db, "notes") != 0 {
+		t.FailNow()
+	}
+	userId := mustAddUserReturnId(db, "Semen", "hashedpasswd")
+
+	if mustCountTable(db, "users") != 1 {
+		t.FailNow()
+	}
+
+	// ACTUAL TEST
+	var note NoteCreate
+	note.Text = `Hello! This is my text. My name is Semen and only 
+				I can see this tho.`
+
+	err = db.PostNote(userId, note)
+	if err != nil {
+		t.FailNow()
+	}
+	// Must be increase to 1
+	if mustCountTable(db, "notes") != 1 {
+		t.FailNow()
+	}
+
+	var checkText string
+	err = db.QueryRow("SELECT text FROM notes WHERE user_id = $1", userId).Scan(&checkText)
+	if err != nil || checkText != note.Text {
+		t.FailNow()
+	}
+
+	// Trying with random userId
+	userIdNotExist := uuid.New()
+	note.Text = `Hello! This is my text. I don't know my name and I even don't exist lol.`
+
+	err = db.PostNote(userIdNotExist, note)
+	if err != nil {
+		// OK
+	} else {
+		t.FailNow()
+	}
+	// Must still the same 1 Semen's note
+	if mustCountTable(db, "notes") != 1 {
+		t.FailNow()
+	}
+}
+
+func TestGetAllNotes(t *testing.T) {
+	clearDb()
+	// FOREPLAY
+	db, err := NewPostgresDatabase(host, password)
+	if err != nil {
+		panic(err)
+	}
+	err = db.Init()
+	if err != nil {
+		panic(err)
+	}
+
+	if mustCountTable(db, "users") != 0 || mustCountTable(db, "notes") != 0 {
+		t.FailNow()
+	}
+	semenId := mustAddUserReturnId(db, "Semen", "hashedpasswd")
+	// Added 3 notes
+	mustAddNoteReturnId(db, semenId, NoteCreate{Text: "First note"})
+	mustAddNoteReturnId(db, semenId, NoteCreate{Text: "Second note"})
+	mustAddNoteReturnId(db, semenId, NoteCreate{Text: "Third note"})
+
+	result, err := db.GetNotes(semenId)
+	if err != nil || len(result.Notes) != 3 {
+		t.FailNow()
+	}
+
+	nicolId := mustAddUserReturnId(db, "Nikol", "hashedpasswd")
+	// Only 2 notes
+	mustAddNoteReturnId(db, nicolId, NoteCreate{Text: "First note"})
+	mustAddNoteReturnId(db, nicolId, NoteCreate{Text: "Second note"})
+
+	result, err = db.GetNotes(nicolId)
+	if err != nil || len(result.Notes) != 2 {
+		t.FailNow()
+	}
+
+}
+
 // func TestExpiredSession(t *testing.T) {
 // 	db, err := NewPostgresDatabase(host, password)
 // 	if err != nil {
@@ -114,5 +209,14 @@ func mustAddUserReturnId(db *PostgresDatabase, username, password string) uuid.U
 		}
 	}
 
+	return id
+}
+
+func mustAddNoteReturnId(db *PostgresDatabase, user_id uuid.UUID, note NoteCreate) uuid.UUID {
+	var id uuid.UUID
+	err := db.QueryRow("INSERT INTO notes (user_id, text) VALUES ($1, $2) RETURNING id", user_id, note.Text).Scan(&id)
+	if err != nil {
+		panic(err)
+	}
 	return id
 }
