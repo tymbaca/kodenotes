@@ -20,12 +20,12 @@ pg-up:
 	docker run --name kodenotes-postgres -e POSTGRES_PASSWORD=mypassword -p 5432:5432 -d postgres
 
 pg-down:
-	docker stop kodenotes-postgres 
+	docker stop kodenotes-postgres &&\
 	docker rm kodenotes-postgres 
 
 pg-restart:
-	docker stop kodenotes-postgres 
-	docker rm kodenotes-postgres 
+	docker stop kodenotes-postgres &&\
+	docker rm kodenotes-postgres &&\
 	docker run --name kodenotes-postgres -e POSTGRES_PASSWORD=mypassword -p 5432:5432 -d postgres
 
 pg-shell:

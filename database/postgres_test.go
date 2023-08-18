@@ -1,6 +1,7 @@
 package database
 
 import (
+        "os"
 	"testing"
 
 	"github.com/google/uuid"
@@ -8,10 +9,8 @@ import (
 )
 
 var (
-	// host     = os.Getenv("POSTGRES_HOST")
-	// password = os.Getenv("POSTGRES_PASSWORD")
-	host     = "localhost" // WARNING: not production code
-	password = "mypassword"
+	host     = os.Getenv("POSTGRES_HOST")
+	password = os.Getenv("POSTGRES_PASSWORD")
 )
 
 func TestMain(m *testing.M) {
