@@ -81,6 +81,10 @@ func (s *Server) handleGetNotes(w http.ResponseWriter, r *http.Request, userId u
 
 func (s *Server) handlePostNote(w http.ResponseWriter, r *http.Request, userId uuid.UUID) {
 	var note database.NoteCreate
+        if r.Header.Get("Content-Type") != "application/json" {
+                http.Error(w, "Content-Type must be application/json", http.StatusBadRequest)
+                return
+        }
 
 	err := json.NewDecoder(r.Body).Decode(&note)
 	if err != nil {
