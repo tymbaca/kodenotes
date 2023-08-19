@@ -1,19 +1,28 @@
 version: "3.0"
 services:
   kodenotes:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      target: ${TARGET_STAGE}
+    build: .
+    container_name: kodenotes
     env_file:
       - .env
+    ports:
+      - ${SERVER_PORT}:${SERVER_PORT}
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
 
   postgres:
     image: postgres
+    container_name: kodenotes-postgres
     env_file:
       - .env
     ports:
       - 5432:5432
+    user: postgres
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready", "-U", "postgres"]
+      interval: 1s
+      timeout: 10s
+      retries: 10
+
 

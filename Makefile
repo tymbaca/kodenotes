@@ -1,32 +1,26 @@
 run: 
+	set -o allexport && . ./.env && set +o allexport &&\
 	export POSTGRES_HOST=localhost &&\
-	export POSTGRES_PASSWORD=mypassword &&\
 	go run main.go
 
-test:
+test: 
+	set -o allexport && . ./.env && set +o allexport &&\
 	export POSTGRES_HOST=localhost &&\
-	export POSTGRES_PASSWORD=mypassword &&\
-	go test ./...
-
-compose-run:
-	export TARGET_STAGE=run &&\
-	docker compose up --build
-
-compose-test:
-	export TARGET_STAGE=test &&\
-	docker compose up --build
+	go test ./... -count=1
 
 pg-up:
-	docker run --name kodenotes-postgres -e POSTGRES_PASSWORD=mypassword -p 5432:5432 -d postgres
+	set -o allexport && . ./.env && set +o allexport &&\
+	docker run --name kodenotes-postgres -e POSTGRES_PASSWORD=$${POSTGRES_PASSWORD} -p 5432:5432 -d postgres
 
 pg-down:
 	docker stop kodenotes-postgres &&\
 	docker rm kodenotes-postgres 
 
 pg-restart:
+	set -o allexport && . ./.env && set +o allexport &&\
 	docker stop kodenotes-postgres &&\
 	docker rm kodenotes-postgres &&\
-	docker run --name kodenotes-postgres -e POSTGRES_PASSWORD=mypassword -p 5432:5432 -d postgres
+	docker run --name kodenotes-postgres -e POSTGRES_PASSWORD=$${POSTGRES_PASSWORD} -p 5432:5432 -d postgres
 
 pg-shell:
 	docker exec -it kodenotes-postgres psql -U postgres -d postgres
