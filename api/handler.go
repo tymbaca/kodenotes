@@ -7,7 +7,6 @@ import (
 	"net/url"
 
 	"github.com/google/uuid"
-	"github.com/tymbaca/kodenotes/database"
 	"github.com/tymbaca/kodenotes/spellcheck"
 )
 
@@ -15,23 +14,23 @@ func (s *Server) handleRegister(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	if r.Method != http.MethodPost {
-		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		http.Error(w, makeJsonError("method not allowed"), http.StatusMethodNotAllowed)
 		return
 	}
 	userId := s.getUserId(r)
 	if userId.Valid {
-		http.Error(w, "username already registred", http.StatusUnprocessableEntity)
+		http.Error(w, makeJsonError("username already registred"), http.StatusUnprocessableEntity)
 		return
 	} else {
 		secureCreds, err := getUserSecureCredentials(r)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
+			http.Error(w, makeJsonError(err.Error()), http.StatusBadRequest)
 			return
 		}
 		_, err = s.db.RegisterUser(secureCreds)
 		if err != nil {
 			// This case should not happen
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			http.Error(w, makeJsonError(err.Error()), http.StatusInternalServerError)
 			return
 		}
 	}
@@ -41,12 +40,12 @@ func (s *Server) handleRegister(w http.ResponseWriter, r *http.Request) {
 func (s *Server) handleNotes(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	// if !authorized(r) {
-	//         http.Error(w, "not authorized", http.StatusUnauthorized)
+	//         http.Error(w, makeJsonError("not authorized"), http.StatusUnauthorized)
 	// }
 
 	result := s.getUserId(r)
 	if !result.Valid {
-		http.Error(w, "not authorized", http.StatusUnauthorized)
+		http.Error(w, makeJsonError("not authorized"), http.StatusUnauthorized)
 		return
 	}
 
@@ -66,45 +65,45 @@ func (s *Server) handleNotes(w http.ResponseWriter, r *http.Request) {
 func (s *Server) handleGetNotes(w http.ResponseWriter, r *http.Request, userId uuid.UUID) {
 	notes, err := s.db.GetNotes(userId)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-                return
+		http.Error(w, makeJsonError(err.Error()), http.StatusInternalServerError)
+		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 
 	err = json.NewEncoder(w).Encode(notes)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-                return
+		http.Error(w, makeJsonError(err.Error()), http.StatusInternalServerError)
+		return
 	}
 }
 
 func (s *Server) handlePostNote(w http.ResponseWriter, r *http.Request, userId uuid.UUID) {
-	var note database.NoteCreate
-        if r.Header.Get("Content-Type") != "application/json" {
-                http.Error(w, "Content-Type must be application/json", http.StatusBadRequest)
-                return
-        }
-
-	err := json.NewDecoder(r.Body).Decode(&note)
-	if err != nil {
-		http.Error(w, "pass json with 'text' field containing text of note", http.StatusBadRequest)
+	if r.Header.Get("Content-Type") != "application/json" {
+		http.Error(w, makeJsonError("Content-Type must be application/json"), http.StatusBadRequest)
 		return
 	}
+
+	note, err := unmarshalNoteRequest(r)
+	if err != nil {
+		http.Error(w, makeJsonError(err.Error()), http.StatusBadRequest)
+		return
+	}
+
 	decodedText, err := url.QueryUnescape(note.Text)
 	if err != nil {
-		http.Error(w, "pass correctly URL Encoded note text inside of 'text' field", http.StatusBadRequest)
-                return
+		http.Error(w, makeJsonError("pass correctly URL Encoded note text inside of 'text' field"), http.StatusBadRequest)
+		return
 	}
 	note.Text = decodedText
 
 	result, err := s.spellschecker.Check(note.Text)
 	if err == spellcheck.ErrYandexTooBigText {
-		http.Error(w, err.Error(), http.StatusRequestEntityTooLarge)
+		http.Error(w, makeJsonError(err.Error()), http.StatusRequestEntityTooLarge)
 		return
 	}
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadGateway)
+		http.Error(w, makeJsonError(err.Error()), http.StatusBadGateway)
 		return
 	}
 
@@ -117,12 +116,12 @@ func (s *Server) handlePostNote(w http.ResponseWriter, r *http.Request, userId u
 		// Good text
 		err = s.db.PostNote(userId, note)
 		if err != nil {
-			http.Error(w, "bad credentials, make sure your username and password are less than 250 chars", http.StatusBadRequest)
+			http.Error(w, makeJsonError("bad credentials, make sure your username and password are less than 250 chars"), http.StatusBadRequest)
 			return
 		}
 		w.WriteHeader(http.StatusCreated)
 	} else {
-		http.Error(w, "spellchecker is broken", http.StatusTeapot)
-                return
+		http.Error(w, makeJsonError("spellchecker is broken"), http.StatusTeapot)
+		return
 	}
 }
