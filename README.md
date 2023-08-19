@@ -43,13 +43,8 @@ make test
 - `POSTGRES_PASSWORD`: пароль пользователя для соединения с PostgreSQL. 
 
 - `YANDEX_SPELLER_URL`: URL API Яндекс.Спеллер, который принимает POST запросы. 
-  На момент создания программы корректный URL - `https://speller.yandex.net/services/spellservice.json/checkText`
-
-- `TARGET_STAGE`: `[ run | test ]` целевой этап сборки `Dockerfile`а. Используется в 
-  `compose.yaml`. `run` полноценно запустит веб-сервер. `test` запустит тесты.
-  Данная переменная нужна только для сборки с `docker compose`. При желании его
-  можно убрать из `.env` файла, и пользоваться утилитой `make` + `Makefile`, где
-  данная переменная уже задана.
+  На момент создания программы корректный URL - `https://speller.yandex.net/services/spellservice.json/checkText`.
+  Подробную документацию по API можно найти по [ссылке](https://yandex.ru/dev/speller/doc/ru/reference/checkText).
 
 - `SERVER_PORT`: который, который будет слушать веб-сервер (по умолчанию будет задан порт `8080`). 
 
