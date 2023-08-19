@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
 
 	"github.com/google/uuid"
 	"github.com/tymbaca/kodenotes/database"
@@ -19,7 +20,7 @@ func (s *Server) handleRegister(w http.ResponseWriter, r *http.Request) {
 	}
 	userId := s.getUserId(r)
 	if userId.Valid {
-		http.Error(w, "username already registred", http.StatusBadRequest)
+		http.Error(w, "username already registred", http.StatusUnprocessableEntity)
 		return
 	} else {
 		secureCreds, err := getUserSecureCredentials(r)
@@ -66,6 +67,7 @@ func (s *Server) handleGetNotes(w http.ResponseWriter, r *http.Request, userId u
 	notes, err := s.db.GetNotes(userId)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
+                return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -73,6 +75,7 @@ func (s *Server) handleGetNotes(w http.ResponseWriter, r *http.Request, userId u
 	err = json.NewEncoder(w).Encode(notes)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
+                return
 	}
 }
 
@@ -84,6 +87,12 @@ func (s *Server) handlePostNote(w http.ResponseWriter, r *http.Request, userId u
 		http.Error(w, "pass json with 'text' field containing text of note", http.StatusBadRequest)
 		return
 	}
+	decodedText, err := url.QueryUnescape(note.Text)
+	if err != nil {
+		http.Error(w, "pass correctly URL Encoded note text inside of 'text' field", http.StatusBadRequest)
+                return
+	}
+	note.Text = decodedText
 
 	result, err := s.spellschecker.Check(note.Text)
 	if err == spellcheck.ErrYandexTooBigText {
@@ -97,8 +106,9 @@ func (s *Server) handlePostNote(w http.ResponseWriter, r *http.Request, userId u
 
 	if len(result) > 0 {
 		// Bad text
-		// TODO: return spellschecker response
+		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(&result)
+		return
 	} else if len(result) == 0 {
 		// Good text
 		err = s.db.PostNote(userId, note)
@@ -106,7 +116,9 @@ func (s *Server) handlePostNote(w http.ResponseWriter, r *http.Request, userId u
 			http.Error(w, "bad credentials, make sure your username and password are less than 250 chars", http.StatusBadRequest)
 			return
 		}
+		w.WriteHeader(http.StatusCreated)
 	} else {
 		http.Error(w, "spellchecker is broken", http.StatusTeapot)
+                return
 	}
 }
