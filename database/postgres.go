@@ -87,18 +87,18 @@ func (d *PostgresDatabase) createUsersTable() error {
 
 // func (d *PostgresDatabase) CreateUser(username, password string) error {}
 func (d *PostgresDatabase) RegisterUser(creds UserSecureCredentials) (uuid.UUID, error) {
-        var userId uuid.UUID
-	err := d.QueryRow("INSERT INTO users (username, password) VALUES ($1, $2) RETURNING id;", 
-                          creds.Username, creds.Password).Scan(&userId)
-        if err != nil {
-                return uuid.UUID{}, err
-        }
-        return userId, nil
+	var userId uuid.UUID
+	err := d.QueryRow("INSERT INTO users (username, password) VALUES ($1, $2) RETURNING id;",
+		creds.Username, creds.Password).Scan(&userId)
+	if err != nil {
+		return uuid.UUID{}, err
+	}
+	return userId, nil
 }
 
 func (d *PostgresDatabase) GetUserId(creds UserSecureCredentials) uuid.NullUUID {
 	var result uuid.NullUUID
-	err := d.QueryRow("SELECT id FROM users WHERE username = $1 AND password = $2").Scan(&result)
+	err := d.QueryRow("SELECT id FROM users WHERE username = $1 AND password = $2", creds.Username, creds.Password).Scan(&result)
 	if err != nil || !result.Valid {
 		return uuid.NullUUID{Valid: false}
 	} else {

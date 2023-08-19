@@ -23,6 +23,7 @@ func NewServer(addr string, db database.Database, spellchecker spellcheck.SpellC
 }
 
 func (s *Server) Start() error {
+        http.HandleFunc("/register", s.handleRegister)
         http.HandleFunc("/notes", s.handleNotes) 
         return http.ListenAndServe(s.addr, nil)
 }
