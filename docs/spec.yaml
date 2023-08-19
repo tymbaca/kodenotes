@@ -3,16 +3,35 @@ openapi: 3.0.1
 info:
   title: KODE Notes
   description: Simple note taking REST API for KODE internship
-  version: 0.1.0
+  version: 0.2.1
   contact:
     email: rostomyan.tm@gmail.com
 
 paths:
+  /register:
+    post: 
+      description: Register new user with data from Basic Auth header
+      tags:
+        - users
+      security: 
+        - basicAuth
+      responses:
+        "201":
+          description: Created new user
+        "400":
+          description: Can't parse BasicAuth credentials from header
+        "405":
+          description: Method not allowed
+        "422":
+          description: Username already exists
+    
   /notes:
     get:
       description: Get all notes data
       tags:
         - notes
+      security: 
+        - basicAuth
       responses:
         "200":
           description: OK
@@ -27,6 +46,8 @@ paths:
       description: Create new note. Checks text of note in Yandex Speller
       tags:
         - notes
+      security: 
+        - basicAuth
       requestBody:
         description: Content of new note
         content:
@@ -36,10 +57,14 @@ paths:
       responses:
         "201":
           description: CREATED
+        "400":
+          description: Bad body
         "401":
           description: Unauthorized
         "413":
           description: Payload Too Large
+        "502":
+          description: Spellchecker server not responding
           
 components:
   schemas:
@@ -68,3 +93,12 @@ components:
       properties:
         text:
           type: string
+          
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
+
+security:
+  - basicAuth: []
+
