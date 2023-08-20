@@ -13,15 +13,16 @@ import (
 )
 
 var (
-	ErrCredsTooLong = errors.New("credentials are too long")
-	ErrCantFindUser = errors.New("username is not in database")
-	ErrUnauthorized = errors.New("can't authorize")
+	ErrCredsTooLong   = errors.New("credentials are too long")
+	ErrCantFindUser   = errors.New("username is not in database")
+	ErrUnauthorized   = errors.New("can't authorize")
+	ErrParseBasicAuth = errors.New("can't parse basic auth")
 )
 
 func (s *Server) getUserId(r *http.Request) (uuid.UUID, error) {
 	username, _, ok := r.BasicAuth()
 	if !ok {
-		return uuid.UUID{}, errors.New("can't parse basic auth")
+		return uuid.UUID{}, ErrParseBasicAuth
 	}
 
 	if len(username) > s.db.MaxCredsLength() {
@@ -29,10 +30,10 @@ func (s *Server) getUserId(r *http.Request) (uuid.UUID, error) {
 	}
 	id := s.db.GetUserId(username)
 	if id.Valid {
-                log.Info("Found user '%s'", username)
+		log.Info("Found user '%s'", username)
 		return id.UUID, nil
 	} else {
-                log.Info("User '%s' does not exist", username)
+		log.Info("User '%s' does not exist", username)
 		return uuid.UUID{}, ErrCantFindUser
 	}
 }
@@ -40,7 +41,7 @@ func (s *Server) getUserId(r *http.Request) (uuid.UUID, error) {
 func (s *Server) getUserIdIfAuthorized(r *http.Request) (uuid.UUID, error) {
 	username, password, ok := r.BasicAuth()
 	if !ok {
-		return uuid.UUID{}, errors.New("can't parse basic auth")
+		return uuid.UUID{}, ErrParseBasicAuth
 	}
 	creds := database.NewUserSecureCredentials(username, password)
 
@@ -49,10 +50,10 @@ func (s *Server) getUserIdIfAuthorized(r *http.Request) (uuid.UUID, error) {
 	}
 	id := s.db.GetUserIdIfAuthorized(creds)
 	if id.Valid {
-                log.Info("User '%s' authorized", username)
+		log.Info("User '%s' authorized", username)
 		return id.UUID, nil
 	} else {
-                log.Info("Attempt to authorize as '%s' user but unsuccessfully", username)
+		log.Info("Attempt to authorize as '%s' user but unsuccessfully", username)
 		return uuid.UUID{}, ErrUnauthorized
 	}
 }
