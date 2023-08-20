@@ -27,3 +27,4 @@ app
 *.log
 
 .vscode
+.DS_Store
