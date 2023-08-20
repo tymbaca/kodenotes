@@ -9,4 +9,5 @@ RUN CGO_ENABLED=0 GOOS=linux go build -o /go/bin/app
 FROM alpine:latest AS run
 WORKDIR /go
 COPY --from=build /go/bin/app .
+RUN mkdir logs
 CMD ./app
