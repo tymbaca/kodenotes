@@ -1,7 +1,7 @@
 version: "3.0"
 services:
   kodenotes:
-    image: tymbaca/kodenotes:latest
+    build: .
     container_name: kodenotes
     env_file:
       - .env

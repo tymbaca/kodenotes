@@ -24,19 +24,19 @@ func NewPostgresDatabase(host, password string) (*PostgresDatabase, error) {
 	connStr := fmt.Sprintf("host=%s dbname=postgres user=postgres password=%s sslmode=disable", host, password)
 	db, err := sql.Open("postgres", connStr)
 	if err != nil {
-                log.Error("PG: Cannot establish connection with PostgreSQL, addr: %s, user: postgres, error %s", 
-                          host, err.Error())
+		log.Error("PG: Cannot establish connection with PostgreSQL, addr: %s, user: postgres, error %s",
+			host, err.Error())
 		return nil, err
 	}
-        log.Info("PG: Opened PostgreSQL connection, addr: %s, user: %s, ssl: off", host, "postgres")
+	log.Info("PG: Opened PostgreSQL connection, addr: %s, user: %s, ssl: off", host, "postgres")
 
 	err = db.Ping()
 	if err != nil {
-                log.Error("PG: Cannot establish connection with PostgreSQL, addr: %s, user: postgres, error: %s",
-                          host, err.Error())
+		log.Error("PG: Cannot establish connection with PostgreSQL, addr: %s, user: postgres, error: %s",
+			host, err.Error())
 		return nil, err
 	}
-        log.Info("PG: PostgreSQL connection is healthy")
+	log.Info("PG: PostgreSQL connection is healthy")
 	pg := &PostgresDatabase{db}
 
 	return pg, nil
@@ -45,24 +45,24 @@ func NewPostgresDatabase(host, password string) (*PostgresDatabase, error) {
 func (d *PostgresDatabase) Init() error {
 	err := d.addUuidExtension()
 	if err != nil {
-                log.Error("PG: Error while 'uuid-ossp' extension: %s", err.Error())
+		log.Error("PG: Error while 'uuid-ossp' extension: %s", err.Error())
 		return err
 	}
-        log.Info("PG: Added 'uuid-ossp' extension")
+	log.Info("PG: Added 'uuid-ossp' extension")
 
 	err = d.createUsersTable()
 	if err != nil {
-                log.Error("PG: error while creating 'users' table, error: %s", err.Error())
+		log.Error("PG: error while creating 'users' table, error: %s", err.Error())
 		return err
 	}
-        log.Info("PG: created 'users' table")
+	log.Info("PG: created 'users' table")
 
 	err = d.createNotesTable()
 	if err != nil {
-                log.Error("PG: error while creating 'notes' table, error: %s", err.Error())
+		log.Error("PG: error while creating 'notes' table, error: %s", err.Error())
 		return err
 	}
-        log.Info("PG: created 'notes' table")
+	log.Info("PG: created 'notes' table")
 
 	return nil
 }
@@ -70,11 +70,15 @@ func (d *PostgresDatabase) Init() error {
 func (d *PostgresDatabase) addUuidExtension() error {
 	query := `CREATE EXTENSION IF NOT EXISTS "uuid-ossp";`
 
-	_, err := d.Exec(query)
+	res, err := d.Exec(query)
 	if err != nil {
 		return err
 	}
+	_ = res
 	return nil
+}
+
+func (d *PostgresDatabase) ensureAddUuidExtension() error {
 
 }
 
@@ -107,10 +111,10 @@ func (d *PostgresDatabase) RegisterUser(creds UserSecureCredentials) (uuid.UUID,
 	err := d.QueryRow("INSERT INTO users (username, password) VALUES ($1, $2) RETURNING id;",
 		creds.Username, creds.Password).Scan(&userId)
 	if err != nil {
-                log.Warn("PG: Unsuccessful attemt to insert user '%s' in database", creds.Username)
+		log.Warn("PG: Unsuccessful attemt to insert user '%s' in database", creds.Username)
 		return uuid.UUID{}, err
 	}
-        log.Info("PG: inserted new user '%s' in database", creds.Username)
+	log.Info("PG: inserted new user '%s' in database", creds.Username)
 	return userId, nil
 }
 
@@ -118,10 +122,10 @@ func (d *PostgresDatabase) GetUserId(username string) uuid.NullUUID {
 	var result uuid.NullUUID
 	err := d.QueryRow("SELECT id FROM users WHERE username = $1", username).Scan(&result)
 	if err != nil || !result.Valid {
-                log.Info("PG: user '%s' not found in database", username)
+		log.Info("PG: user '%s' not found in database", username)
 		return uuid.NullUUID{Valid: false}
 	} else {
-                log.Info("PG: found user '%s' in database", username)
+		log.Info("PG: found user '%s' in database", username)
 		return result
 	}
 }
@@ -130,10 +134,10 @@ func (d *PostgresDatabase) GetUserIdIfAuthorized(creds UserSecureCredentials) uu
 	var result uuid.NullUUID
 	err := d.QueryRow("SELECT id FROM users WHERE username = $1 AND password = $2", creds.Username, creds.Password).Scan(&result)
 	if err != nil || !result.Valid {
-                log.Info("PG: cannot authorize user '%s'", creds.Username)
+		log.Info("PG: cannot authorize user '%s'", creds.Username)
 		return uuid.NullUUID{Valid: false}
 	} else {
-                log.Info("PG: user '%s' is authorized", creds.Username)
+		log.Info("PG: user '%s' is authorized", creds.Username)
 		return result
 	}
 }
@@ -161,7 +165,7 @@ func (d *PostgresDatabase) GetNotes(userId uuid.UUID) (NoteGetAll, error) {
 
 	rows, err := d.Query(`SELECT id, user_id, text FROM notes WHERE user_id = $1;`, userId)
 	if err != nil {
-                log.Error("PG: cannot get notes from database for user id: '%s', error: %s", userId.String(), err.Error())
+		log.Error("PG: cannot get notes from database for user id: '%s', error: %s", userId.String(), err.Error())
 		return NoteGetAll{}, err
 	}
 	defer rows.Close()
@@ -172,13 +176,13 @@ func (d *PostgresDatabase) GetNotes(userId uuid.UUID) (NoteGetAll, error) {
 			&note.UserId,
 			&note.Text)
 		if err != nil {
-                        log.Error("PG: cannot parse notes from database for user id: '%s', error: %s", userId.String(), err.Error())
+			log.Error("PG: cannot parse notes from database for user id: '%s', error: %s", userId.String(), err.Error())
 			return NoteGetAll{}, err
 		}
 
 		result.Notes = append(result.Notes, note)
 	}
-        log.Info("PG: getted notes from database for user id: '%s'", userId.String())
+	log.Info("PG: getted notes from database for user id: '%s'", userId.String())
 	return result, nil
 }
 
@@ -187,9 +191,9 @@ func (d *PostgresDatabase) PostNote(userId uuid.UUID, note NoteCreate) error {
 		userId, note.Text)
 	// It also detects if userId not present in table users
 	if err != nil {
-                log.Error("PG: cannot insert note for user id: '%s', error: %s", userId.String(), err.Error())
+		log.Error("PG: cannot insert note for user id: '%s', error: %s", userId.String(), err.Error())
 		return err
 	}
-        log.Error("PG: inserted note for user id: '%s'", userId.String())
+	log.Error("PG: inserted note for user id: '%s'", userId.String())
 	return nil
 }

@@ -4,11 +4,9 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
-	"os"
 	"testing"
 
 	"github.com/google/uuid"
@@ -314,7 +312,6 @@ func parseGetNotes(t *testing.T, resp *httptest.ResponseRecorder) database.NoteG
 }
 
 func mustSetupServerAndDb() (*Server, *database.PostgresDatabase) {
-	log.SetOutput(os.Stdout)
 	serverPort := util.MustGetenv(serverPortEnvVar)
 
 	pgHost := util.MustGetenv(pgHostEnvVar)
@@ -326,9 +323,8 @@ func mustSetupServerAndDb() (*Server, *database.PostgresDatabase) {
 	}
 	err = postgres.Init()
 	if err != nil {
-		fmt.Println(err)
+		panic(err)
 	}
-	mustClearDb(postgres)
 
 	yandexSpeller := spellcheck.NewYandexSpeller()
 	server := NewServer(":"+serverPort, postgres, yandexSpeller)
@@ -381,12 +377,15 @@ func mustAddNoteReturnId(user_id uuid.UUID, text string) uuid.UUID {
 }
 
 func mustClearDb(db *database.PostgresDatabase) {
-	_, err := db.Exec(`
-		DROP SCHEMA public CASCADE;
-		CREATE SCHEMA public;
-	`)
+	_, err := db.Exec(`TRUNCATE TABLE notes, users;`)
 	if err != nil {
 		panic(err)
 	}
-	db.Init()
+}
+
+func truncateTableDb(db *database.PostgresDatabase, table string) {
+	_, err := db.Exec("TRUNCATE TABLE $1;", table)
+	if err != nil {
+		panic(err)
+	}
 }
