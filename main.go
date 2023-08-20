@@ -1,10 +1,9 @@
 package main
 
 import (
-	"log"
-
 	"github.com/tymbaca/kodenotes/api"
 	"github.com/tymbaca/kodenotes/database"
+	"github.com/tymbaca/kodenotes/log"
 	"github.com/tymbaca/kodenotes/spellcheck"
 	"github.com/tymbaca/kodenotes/util"
 )
@@ -33,6 +32,6 @@ func main() {
 	yandexSpeller := spellcheck.NewYandexSpeller()
 	server := api.NewServer(":"+serverPort, postgres, yandexSpeller)
 
-	log.Printf("server running on port: %s", serverPort)
+	log.Info("server running on port: %s", serverPort)
 	log.Fatal(server.Start())
 }
