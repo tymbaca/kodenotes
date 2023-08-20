@@ -1,7 +1,7 @@
 version: "3.0"
 services:
   kodenotes:
-    build: .
+    image: tymbaca/kodenotes:latest
     container_name: kodenotes
     env_file:
       - .env
@@ -20,10 +20,5 @@ services:
     ports:
       - 5432:5432
     user: postgres
-    # healthcheck:
-    #   test: ["CMD-SHELL", "pg_isready", "-U", "postgres"]
-    #   interval: 1s
-    #   timeout: 10s
-    #   retries: 10
 
 
