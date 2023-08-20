@@ -28,7 +28,7 @@ func NewLogger(out io.Writer, infoPref, warnPref, errorPref, fatalPref string) *
 }
 
 func init() {
-	path := "server.log"
+	path := "logs/server.log"
 	if _, err := os.Stat(path); errors.Is(err, os.ErrNotExist) {
 		_, err2 := os.Create(path)
 		if err2 != nil {

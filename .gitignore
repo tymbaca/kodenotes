@@ -24,5 +24,6 @@ go.work
 __debug*
 bin
 app
+*.log
 
 .vscode
