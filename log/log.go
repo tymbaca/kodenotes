@@ -1,9 +1,9 @@
 package log
 
 import (
-	"errors"
 	"io"
 	"log"
+	"net/http"
 	"os"
 )
 
@@ -15,7 +15,7 @@ type Logger struct {
 }
 
 var (
-	logger     = &Logger{}
+	logger = &Logger{}
 )
 
 func NewLogger(out io.Writer, infoPref, warnPref, errorPref, fatalPref string) *Logger {
@@ -28,20 +28,11 @@ func NewLogger(out io.Writer, infoPref, warnPref, errorPref, fatalPref string) *
 }
 
 func init() {
-	path := "logs/server.log"
-	if _, err := os.Stat(path); errors.Is(err, os.ErrNotExist) {
-		_, err2 := os.Create(path)
-		if err2 != nil {
-			panic(err2)
-		}
-	}
-	logFile, err := os.OpenFile(path, os.O_RDWR | os.O_CREATE | os.O_APPEND, 0666)
-	if err != nil {
-		panic(err)
-	}
+	logger = NewLogger(os.Stdout, "[INFO]\t", "[WARN]\t", "[ERROR]\t", "[FATAL]\t")
+}
 
-	multiOut := io.MultiWriter(os.Stdout, logFile)
-	logger = NewLogger(multiOut, "[INFO]\t", "[WARN]\t", "[ERROR]\t", "[FATAL]\t")
+func SetOutput(out io.Writer) {
+	logger = NewLogger(out, "[INFO]\t", "[WARN]\t", "[ERROR]\t", "[FATAL]\t")
 }
 
 func Info(msg string, args ...any) {
@@ -58,4 +49,8 @@ func Error(msg string, args ...any) {
 
 func Fatal(v ...any) {
 	logger.error.Fatal(v...)
+}
+
+func RequestInfo(r *http.Request, msg string, respStatus int) {
+	Info("| %s\t| %s\t| %s\t|X| %s\t| %d", r.Host, r.URL, r.Method, msg, respStatus)
 }

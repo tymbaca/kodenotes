@@ -8,6 +8,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/tymbaca/kodenotes/database"
+	"github.com/tymbaca/kodenotes/log"
 	"github.com/tymbaca/kodenotes/spellcheck"
 )
 
@@ -28,8 +29,10 @@ func (s *Server) getUserId(r *http.Request) (uuid.UUID, error) {
 	}
 	id := s.db.GetUserId(username)
 	if id.Valid {
+                log.Info("Found user '%s'", username)
 		return id.UUID, nil
 	} else {
+                log.Info("User '%s' does not exist", username)
 		return uuid.UUID{}, ErrCantFindUser
 	}
 }
@@ -46,8 +49,10 @@ func (s *Server) getUserIdIfAuthorized(r *http.Request) (uuid.UUID, error) {
 	}
 	id := s.db.GetUserIdIfAuthorized(creds)
 	if id.Valid {
+                log.Info("User '%s' authorized", username)
 		return id.UUID, nil
 	} else {
+                log.Info("Attempt to authorize as '%s' user but unsuccessfully", username)
 		return uuid.UUID{}, ErrUnauthorized
 	}
 }

@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"os"
 	"testing"
 
 	"github.com/google/uuid"
@@ -32,6 +33,7 @@ var (
 )
 
 func TestMain(m *testing.M) {
+	mustClearDb(db)
 	m.Run()
 }
 
@@ -312,6 +314,7 @@ func parseGetNotes(t *testing.T, resp *httptest.ResponseRecorder) database.NoteG
 }
 
 func mustSetupServerAndDb() (*Server, *database.PostgresDatabase) {
+	log.SetOutput(os.Stdout)
 	serverPort := util.MustGetenv(serverPortEnvVar)
 
 	pgHost := util.MustGetenv(pgHostEnvVar)
@@ -319,11 +322,11 @@ func mustSetupServerAndDb() (*Server, *database.PostgresDatabase) {
 
 	postgres, err := database.NewPostgresDatabase(pgHost, pgPassword)
 	if err != nil {
-		log.Fatal(err)
+		panic(err)
 	}
 	err = postgres.Init()
 	if err != nil {
-		log.Fatal(err)
+		fmt.Println(err)
 	}
 	mustClearDb(postgres)
 
