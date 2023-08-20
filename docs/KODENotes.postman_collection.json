@@ -65,7 +65,7 @@
 						},
 						{
 							"key": "Date",
-							"value": "Sat, 19 Aug 2023 21:20:22 GMT"
+							"value": "Sun, 20 Aug 2023 09:30:39 GMT"
 						},
 						{
 							"key": "Content-Length",
@@ -139,7 +139,7 @@
 						},
 						{
 							"key": "Date",
-							"value": "Sat, 19 Aug 2023 20:40:45 GMT"
+							"value": "Sun, 20 Aug 2023 09:30:43 GMT"
 						},
 						{
 							"key": "Content-Length",
@@ -148,6 +148,80 @@
 					],
 					"cookie": [],
 					"body": "{\"detail\":\"username already registred\"}\n"
+				}
+			]
+		},
+		{
+			"name": "Register user | Very long credentials",
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "Very long password 02934tu0eu 89034t7gu89n74r89ftgyu894eyuhnvf9y5t894bb7y589 vbyu79ervgheu8iogyeiruhg8ier7gyh3794hiurh3g8943iouhjf58uio34yht89347hvtn98347ngbv89t34 nu9687340b69g 7u039476083gn739047h3h94gf6890347h9fg734906g7934867h3480g76h9083745h69803gb6h89347890h3g7n0347868034g76034hb6730g760376h90234g0v4n0673904g7b6024760247034670934786gbv84672390g73b034706g7b80347603760hb3g704",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "Very long username gdisopgj 90sdguj0er89osgj r8iosgoerhnjgo34ijg80434w4j 890guerjgj 023ugjf 0298nub 07ut08e4u 027ut 0uje4029ytut0 n94eg7uj480gyu4 n3y2u0-y9ghui89p-e48y-n092y8i p-e4r92ui890ghn86i42 0vn68i4-2098bh49-2nw86b 8i0-246i696 666=2640-96ib-2486 0-24i9-n=b9 ih046i90oik6ygh03yyyyiykyyyy0py[y3y54iy3kmyp0i-34[yikh-08jm4yb,gm3 05ik6340=f69g3k0=g-6tm90-4r39646b846ryh4903y8i9034u",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "localhost:8080/register",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"register"
+					]
+				}
+			},
+			"response": [
+				{
+					"name": "Register user | Very long credentials",
+					"originalRequest": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "localhost:8080/register",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"register"
+							]
+						}
+					},
+					"status": "Request Entity Too Large",
+					"code": 413,
+					"_postman_previewlanguage": "plain",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "text/plain; charset=utf-8"
+						},
+						{
+							"key": "X-Content-Type-Options",
+							"value": "nosniff"
+						},
+						{
+							"key": "Date",
+							"value": "Sun, 20 Aug 2023 09:30:47 GMT"
+						},
+						{
+							"key": "Content-Length",
+							"value": "38"
+						}
+					],
+					"cookie": [],
+					"body": "{\"detail\":\"credentials are too long\"}\n"
 				}
 			]
 		},
@@ -201,15 +275,15 @@
 						},
 						{
 							"key": "Date",
-							"value": "Sat, 19 Aug 2023 20:41:52 GMT"
+							"value": "Sun, 20 Aug 2023 09:30:52 GMT"
 						},
 						{
 							"key": "Content-Length",
-							"value": "58"
+							"value": "36"
 						}
 					],
 					"cookie": [],
-					"body": "{\"detail\":\"error while parsing credentials from request\"}\n"
+					"body": "{\"detail\":\"can't parse basic auth\"}\n"
 				}
 			]
 		},
@@ -289,7 +363,7 @@
 						},
 						{
 							"key": "Date",
-							"value": "Sat, 19 Aug 2023 20:42:43 GMT"
+							"value": "Sun, 20 Aug 2023 09:31:10 GMT"
 						},
 						{
 							"key": "Content-Length",
@@ -377,7 +451,7 @@
 						},
 						{
 							"key": "Date",
-							"value": "Sat, 19 Aug 2023 20:42:54 GMT"
+							"value": "Sun, 20 Aug 2023 09:31:16 GMT"
 						},
 						{
 							"key": "Content-Length",
@@ -465,7 +539,7 @@
 						},
 						{
 							"key": "Date",
-							"value": "Sat, 19 Aug 2023 20:43:03 GMT"
+							"value": "Sun, 20 Aug 2023 09:31:20 GMT"
 						},
 						{
 							"key": "Content-Length",
@@ -519,7 +593,7 @@
 			},
 			"response": [
 				{
-					"name": "Post Notes Copy",
+					"name": "Post Notes | Wrong Content-Type",
 					"originalRequest": {
 						"method": "POST",
 						"header": [],
@@ -557,7 +631,7 @@
 						},
 						{
 							"key": "Date",
-							"value": "Sat, 19 Aug 2023 20:43:16 GMT"
+							"value": "Sun, 20 Aug 2023 09:31:24 GMT"
 						},
 						{
 							"key": "Content-Length",
@@ -645,7 +719,7 @@
 						},
 						{
 							"key": "Date",
-							"value": "Sat, 19 Aug 2023 21:12:03 GMT"
+							"value": "Sun, 20 Aug 2023 09:31:28 GMT"
 						},
 						{
 							"key": "Content-Length",
@@ -737,7 +811,7 @@
 						},
 						{
 							"key": "Date",
-							"value": "Sat, 19 Aug 2023 20:43:47 GMT"
+							"value": "Sun, 20 Aug 2023 09:31:32 GMT"
 						},
 						{
 							"key": "Content-Length",
@@ -817,7 +891,7 @@
 						},
 						{
 							"key": "Date",
-							"value": "Sat, 19 Aug 2023 21:19:24 GMT"
+							"value": "Sun, 20 Aug 2023 09:31:38 GMT"
 						},
 						{
 							"key": "Content-Length",
@@ -909,7 +983,7 @@
 						},
 						{
 							"key": "Date",
-							"value": "Sat, 19 Aug 2023 21:19:32 GMT"
+							"value": "Sun, 20 Aug 2023 09:31:44 GMT"
 						},
 						{
 							"key": "Content-Length",
@@ -1001,7 +1075,7 @@
 						},
 						{
 							"key": "Date",
-							"value": "Sat, 19 Aug 2023 21:21:00 GMT"
+							"value": "Sun, 20 Aug 2023 09:31:48 GMT"
 						},
 						{
 							"key": "Content-Length",
@@ -1079,7 +1153,7 @@
 						},
 						{
 							"key": "Date",
-							"value": "Sat, 19 Aug 2023 21:21:07 GMT"
+							"value": "Sun, 20 Aug 2023 09:31:51 GMT"
 						},
 						{
 							"key": "Content-Length",
@@ -1087,7 +1161,7 @@
 						}
 					],
 					"cookie": [],
-					"body": "{\n    \"notes\": [\n        {\n            \"id\": \"41c282c4-3ed6-11ee-bd10-0242ac110002\",\n            \"userId\": \"f1943e55-ab22-4542-832f-b9b362430dac\",\n            \"text\": \"Here, in Line 7, we are essentially opening the log.txt file in the Create and Append mode. Next line, we instruct the program to close the file once the function is exited. In Line 9, to the logger instance, we are setting the output file as the previously opened logfile. After that, every time we log anything using the log package, the messages, and content will be written to the defined log file.\"\n        },\n        {\n            \"id\": \"444d4ed4-3ed6-11ee-bd10-0242ac110002\",\n            \"userId\": \"f1943e55-ab22-4542-832f-b9b362430dac\",\n            \"text\": \"URL Encoding (Percent Encoding)\\nURL encoding converts characters into a format that can be transmitted over the Internet.\\n\\nURLs can only be sent over the Internet using the ASCII character-set.\\n\\nSince URLs often contain characters outside the ASCII set, the URL has to be converted into a valid ASCII format.\\n\\nURL encoding replaces unsafe ASCII characters with a \\\"%\\\" followed by two hexadecimal digits.\\nURLs cannot contain spaces. URL encoding normally replaces a space with a plus (+) sign or with %20.\"\n        },\n        {\n            \"id\": \"45771ac4-3ed6-11ee-bd10-0242ac110002\",\n            \"userId\": \"f1943e55-ab22-4542-832f-b9b362430dac\",\n            \"text\": \"New text with another field Here, in Line 7, we are essentially opening the log.txt file in the Create and Append mode. Next line, we instruct the program to close the file once the function is exited. In Line 9, to the logger instance, we are setting the output file as the previously opened logfile. After that, every time we log anything using the log package, the messages, and content will be written to the defined log file.\"\n        }\n    ]\n}"
+					"body": "{\n    \"notes\": [\n        {\n            \"id\": \"4bd82276-3f3c-11ee-b676-0242ac110002\",\n            \"userId\": \"aaf86fb4-4ad2-431b-ae33-c49e0940824e\",\n            \"text\": \"Here, in Line 7, we are essentially opening the log.txt file in the Create and Append mode. Next line, we instruct the program to close the file once the function is exited. In Line 9, to the logger instance, we are setting the output file as the previously opened logfile. After that, every time we log anything using the log package, the messages, and content will be written to the defined log file.\"\n        },\n        {\n            \"id\": \"4f854a7a-3f3c-11ee-b676-0242ac110002\",\n            \"userId\": \"aaf86fb4-4ad2-431b-ae33-c49e0940824e\",\n            \"text\": \"URL Encoding (Percent Encoding)\\nURL encoding converts characters into a format that can be transmitted over the Internet.\\n\\nURLs can only be sent over the Internet using the ASCII character-set.\\n\\nSince URLs often contain characters outside the ASCII set, the URL has to be converted into a valid ASCII format.\\n\\nURL encoding replaces unsafe ASCII characters with a \\\"%\\\" followed by two hexadecimal digits.\\nURLs cannot contain spaces. URL encoding normally replaces a space with a plus (+) sign or with %20.\"\n        },\n        {\n            \"id\": \"51c49b60-3f3c-11ee-b676-0242ac110002\",\n            \"userId\": \"aaf86fb4-4ad2-431b-ae33-c49e0940824e\",\n            \"text\": \"New text with another field Here, in Line 7, we are essentially opening the log.txt file in the Create and Append mode. Next line, we instruct the program to close the file once the function is exited. In Line 9, to the logger instance, we are setting the output file as the previously opened logfile. After that, every time we log anything using the log package, the messages, and content will be written to the defined log file.\"\n        }\n    ]\n}"
 				}
 			]
 		},
@@ -1149,7 +1223,7 @@
 						},
 						{
 							"key": "Date",
-							"value": "Sat, 19 Aug 2023 21:21:21 GMT"
+							"value": "Sun, 20 Aug 2023 09:31:55 GMT"
 						},
 						{
 							"key": "Content-Length",
@@ -1231,7 +1305,7 @@
 						},
 						{
 							"key": "Date",
-							"value": "Sat, 19 Aug 2023 21:21:27 GMT"
+							"value": "Sun, 20 Aug 2023 09:31:58 GMT"
 						},
 						{
 							"key": "Content-Length",
@@ -1301,7 +1375,7 @@
 						},
 						{
 							"key": "Date",
-							"value": "Sat, 19 Aug 2023 21:21:34 GMT"
+							"value": "Sun, 20 Aug 2023 09:32:02 GMT"
 						},
 						{
 							"key": "Content-Length",
@@ -1389,7 +1463,7 @@
 						},
 						{
 							"key": "Date",
-							"value": "Sat, 19 Aug 2023 21:21:38 GMT"
+							"value": "Sun, 20 Aug 2023 09:32:07 GMT"
 						},
 						{
 							"key": "Content-Length",
@@ -1467,7 +1541,7 @@
 						},
 						{
 							"key": "Date",
-							"value": "Sat, 19 Aug 2023 21:21:56 GMT"
+							"value": "Sun, 20 Aug 2023 09:32:11 GMT"
 						},
 						{
 							"key": "Content-Length",
@@ -1475,7 +1549,7 @@
 						}
 					],
 					"cookie": [],
-					"body": "{\n    \"notes\": [\n        {\n            \"id\": \"6219a192-3ed6-11ee-bd10-0242ac110002\",\n            \"userId\": \"e4980ec0-c011-4327-9933-67f17d3fa8ae\",\n            \"text\": \"Мое имя Анатолий, я тут новенький. Это моя первая и пока единственная заметка.\"\n        }\n    ]\n}"
+					"body": "{\n    \"notes\": [\n        {\n            \"id\": \"6dcbb078-3f3c-11ee-b676-0242ac110002\",\n            \"userId\": \"6ead87c7-b86e-4f28-a061-ecf14a0a94ee\",\n            \"text\": \"Мое имя Анатолий, я тут новенький. Это моя первая и пока единственная заметка.\"\n        }\n    ]\n}"
 				}
 			]
 		}
