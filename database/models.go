@@ -43,7 +43,7 @@ type NoteGetAll struct {
 }
 
 type NoteGet struct {
-	Id     string `json:"id"`
+	Id     uuid.UUID `json:"id"`
 	UserId string `json:"userId"`
 	Text   string `json:"text"`
 }

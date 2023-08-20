@@ -1,7 +1,7 @@
 package database
 
 import (
-        "os"
+	"os"
 	"testing"
 
 	"github.com/google/uuid"
@@ -14,64 +14,45 @@ var (
 )
 
 func TestMain(m *testing.M) {
-	clearDb()
+	mustClearDb()
 	m.Run()
 }
 
-// func setup() {
-
-// }
-
-func clearDb() {
-	db, err := NewPostgresDatabase(host, password)
-	if err != nil {
-		panic(err)
-	}
-
-	_, err = db.Exec(`
-		DROP SCHEMA public CASCADE;
-		CREATE SCHEMA public;
-	`)
-	if err != nil {
-		panic(err)
-	}
-}
-
 func TestReqisterUser(t *testing.T) {
-        db := mustSetupCleanDb()
+	db := mustSetupCleanDb()
 
-        semenId, err := db.RegisterUser(UserSecureCredentials{Username: "Semen", Password: "hashedpasswd"})
-        if err != nil || mustCountTable(db, "users") != 1 {
-                t.FailNow()
-        }
-        var semen User
-        err = db.QueryRow("SELECT id, username, password FROM users WHERE id = $1", semenId).Scan(&semen.Id, &semen.Username, &semen.Password)
-        if err != nil {
-                t.FailNow()
-        }
+	semenId, err := db.RegisterUser(UserSecureCredentials{Username: "Semen", Password: "hashedpasswd"})
+	if err != nil || mustCountTable(db, "users") != 1 {
+		t.FailNow()
+	}
+	var semen User
+	err = db.QueryRow("SELECT id, username, password FROM users WHERE id = $1", semenId).Scan(&semen.Id, &semen.Username, &semen.Password)
+	if err != nil {
+		t.FailNow()
+	}
 
-        // Adding user with same username. Must return error
-        _, err = db.RegisterUser(UserSecureCredentials{Username: "Semen", Password: "anotherpasswd"})
-        if err != nil {
-                // OK
-        } else {
-                t.FailNow()
-        }
+	// Adding user with same username. Must return error
+	_, err = db.RegisterUser(UserSecureCredentials{Username: "Semen", Password: "anotherpasswd"})
+	if err != nil {
+		// OK
+	} else {
+		t.FailNow()
+	}
 
-        // Adding user with too long credentials. 382 charackers (Max is set to 250)
-        longUsername := "Very long username gdisopgj 90sdguj0er89osgj r8iosgoerhnjgo34ijg80434w4j 890guerjgj 023ugjf 0298nub 07ut08e4u 027ut 0uje4029ytut0 n94eg7uj480gyu4 n3y2u0-y9ghui89p-e48y-n092y8i p-e4r92ui890ghn86i42 0vn68i4-2098bh49-2nw86b 8i0-246i696 666=2640-96ib-2486 0-24i9-n=b9 ih046i90oik6ygh03yyyyiykyyyy0py[y3y54iy3kmyp0i-34[yikh-08jm4yb,gm3 05ik6340=f69g3k0=g-6tm90-4r39646b846ryh4903y8i9034u"
-        longPassword := "Very long password 02934tu0eu 89034t7gu89n74r89ftgyu894eyuhnvf9y5t894bb7y589 vbyu79ervgheu8iogyeiruhg8ier7gyh3794hiurh3g8943iouhjf58uio34yht89347hvtn98347ngbv89t34 nu9687340b69g 7u039476083gn739047h3h94gf6890347h9fg734906g7934867h3480g76h9083745h69803gb6h89347890h3g7n0347868034g76034hb6730g760376h90234g0v4n0673904g7b6024760247034670934786gbv84672390g73b034706g7b80347603760hb3g704"
-        longUserCreds := UserSecureCredentials{Username: longUsername, Password: longPassword}
-        _, err = db.RegisterUser(longUserCreds)
-        if err != nil {
-                // OK
-        } else {
-                t.FailNow()
-        }
+	// Adding user with too long credentials. 382 charackers (Max is set to 250)
+	longUsername := "Very long username gdisopgj 90sdguj0er89osgj r8iosgoerhnjgo34ijg80434w4j 890guerjgj 023ugjf 0298nub 07ut08e4u 027ut 0uje4029ytut0 n94eg7uj480gyu4 n3y2u0-y9ghui89p-e48y-n092y8i p-e4r92ui890ghn86i42 0vn68i4-2098bh49-2nw86b 8i0-246i696 666=2640-96ib-2486 0-24i9-n=b9 ih046i90oik6ygh03yyyyiykyyyy0py[y3y54iy3kmyp0i-34[yikh-08jm4yb,gm3 05ik6340=f69g3k0=g-6tm90-4r39646b846ryh4903y8i9034u"
+	longPassword := "Very long password 02934tu0eu 89034t7gu89n74r89ftgyu894eyuhnvf9y5t894bb7y589 vbyu79ervgheu8iogyeiruhg8ier7gyh3794hiurh3g8943iouhjf58uio34yht89347hvtn98347ngbv89t34 nu9687340b69g 7u039476083gn739047h3h94gf6890347h9fg734906g7934867h3480g76h9083745h69803gb6h89347890h3g7n0347868034g76034hb6730g760376h90234g0v4n0673904g7b6024760247034670934786gbv84672390g73b034706g7b80347603760hb3g704"
+	longUserCreds := UserSecureCredentials{Username: longUsername, Password: longPassword}
+	_, err = db.RegisterUser(longUserCreds)
+	if err != nil {
+		// OK
+	} else {
+		t.FailNow()
+	}
 }
 
-func TestGetNotes(t *testing.T) {
-        db := mustSetupCleanDb()
+func TestPostNotes(t *testing.T) {
+	db := mustSetupCleanDb()
 
 	userId := mustAddUserReturnId(db, "Semen", "hashedpasswd")
 	if mustCountTable(db, "users") != 1 {
@@ -82,14 +63,14 @@ func TestGetNotes(t *testing.T) {
 	var note NoteCreate
 	note.Text = `Hello! This is my text. My name is Semen and only I can see this tho.`
 
-        err := db.PostNote(userId, note)
-        if err != nil {
-                t.FailNow()
-        }
-        // Must be increase to 1
-        if mustCountTable(db, "notes") != 1 {
-                t.FailNow()
-        }
+	err := db.PostNote(userId, note)
+	if err != nil {
+		t.FailNow()
+	}
+	// Must be increase to 1
+	if mustCountTable(db, "notes") != 1 {
+		t.FailNow()
+	}
 
 	var checkText string
 	err = db.QueryRow("SELECT text FROM notes WHERE user_id = $1", userId).Scan(&checkText)
@@ -114,7 +95,7 @@ func TestGetNotes(t *testing.T) {
 }
 
 func TestGetAllNotes(t *testing.T) {
-        db := mustSetupCleanDb()
+	db := mustSetupCleanDb()
 
 	semenId := mustAddUserReturnId(db, "Semen", "hashedpasswd")
 	// Added 3 notes
@@ -186,7 +167,7 @@ func TestGetAllNotes(t *testing.T) {
 // }
 
 func mustSetupCleanDb() *PostgresDatabase {
-	clearDb()
+	mustClearDb()
 	// FOREPLAY
 	db, err := NewPostgresDatabase(host, password)
 	if err != nil {
@@ -200,7 +181,7 @@ func mustSetupCleanDb() *PostgresDatabase {
 	if mustCountTable(db, "users") != 0 || mustCountTable(db, "notes") != 0 {
 		panic("tables are not clean")
 	}
-        return db
+	return db
 }
 
 func mustCountTable(db *PostgresDatabase, table string) int {
@@ -220,7 +201,7 @@ func mustCountTable(db *PostgresDatabase, table string) int {
 }
 
 func mustAddUserReturnId(db *PostgresDatabase, username, password string) uuid.UUID {
-	var id uuid.UUID // BAD. ID is not a string
+	var id uuid.UUID
 	rows, err := db.Query("INSERT INTO users (username, password) VALUES ($1, $2) RETURNING id;", username, password)
 	if err != nil {
 		panic(err)
@@ -243,4 +224,19 @@ func mustAddNoteReturnId(db *PostgresDatabase, user_id uuid.UUID, note NoteCreat
 		panic(err)
 	}
 	return id
+}
+
+func mustClearDb() {
+	db, err := NewPostgresDatabase(host, password)
+	if err != nil {
+		panic(err)
+	}
+
+	_, err = db.Exec(`
+		DROP SCHEMA public CASCADE;
+		CREATE SCHEMA public;
+	`)
+	if err != nil {
+		panic(err)
+	}
 }

@@ -85,6 +85,10 @@ func (d *PostgresDatabase) createUsersTable() error {
 	return nil
 }
 
+func (d *PostgresDatabase) MaxCredsLength() int {
+	return 250
+}
+
 // func (d *PostgresDatabase) CreateUser(username, password string) error {}
 func (d *PostgresDatabase) RegisterUser(creds UserSecureCredentials) (uuid.UUID, error) {
 	var userId uuid.UUID
@@ -96,7 +100,17 @@ func (d *PostgresDatabase) RegisterUser(creds UserSecureCredentials) (uuid.UUID,
 	return userId, nil
 }
 
-func (d *PostgresDatabase) GetUserId(creds UserSecureCredentials) uuid.NullUUID {
+func (d *PostgresDatabase) GetUserId(username string) uuid.NullUUID {
+	var result uuid.NullUUID
+	err := d.QueryRow("SELECT id FROM users WHERE username = $1", username).Scan(&result)
+	if err != nil || !result.Valid {
+		return uuid.NullUUID{Valid: false}
+	} else {
+		return result
+	}
+}
+
+func (d *PostgresDatabase) GetUserIdIfAuthorized(creds UserSecureCredentials) uuid.NullUUID {
 	var result uuid.NullUUID
 	err := d.QueryRow("SELECT id FROM users WHERE username = $1 AND password = $2", creds.Username, creds.Password).Scan(&result)
 	if err != nil || !result.Valid {

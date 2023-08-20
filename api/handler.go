@@ -17,11 +17,16 @@ func (s *Server) handleRegister(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, makeJsonError("method not allowed"), http.StatusMethodNotAllowed)
 		return
 	}
-	userId := s.getUserId(r)
-	if userId.Valid {
+	_, err := s.getUserId(r)
+	if err == ErrCredsTooLong {
+		http.Error(w, makeJsonError(err.Error()), http.StatusRequestEntityTooLarge)
+		return
+	}
+	if err == nil {
 		http.Error(w, makeJsonError("username already registred"), http.StatusUnprocessableEntity)
 		return
-	} else {
+	}
+	if err == ErrCantFindUser {
 		secureCreds, err := getUserSecureCredentials(r)
 		if err != nil {
 			http.Error(w, makeJsonError(err.Error()), http.StatusBadRequest)
@@ -43,13 +48,11 @@ func (s *Server) handleNotes(w http.ResponseWriter, r *http.Request) {
 	//         http.Error(w, makeJsonError("not authorized"), http.StatusUnauthorized)
 	// }
 
-	result := s.getUserId(r)
-	if !result.Valid {
+	userId, err := s.getUserIdIfAuthorized(r)
+	if err != nil {
 		http.Error(w, makeJsonError("not authorized"), http.StatusUnauthorized)
 		return
 	}
-
-	userId := result.UUID
 
 	switch r.Method {
 	case http.MethodGet:
@@ -57,7 +60,7 @@ func (s *Server) handleNotes(w http.ResponseWriter, r *http.Request) {
 	case http.MethodPost:
 		s.handlePostNote(w, r, userId)
 	default:
-		http.Error(w, fmt.Sprintf("method %s not allowed. Use eather GET or POST", r.Method), http.StatusMethodNotAllowed)
+		http.Error(w, makeJsonError(fmt.Sprintf("method %s not allowed. Use eather GET or POST", r.Method)), http.StatusMethodNotAllowed)
 		return
 	}
 }
@@ -97,7 +100,8 @@ func (s *Server) handlePostNote(w http.ResponseWriter, r *http.Request, userId u
 	}
 	note.Text = decodedText
 
-	result, err := s.spellschecker.Check(note.Text)
+	// Spell checker
+	checkData, err := s.spellschecker.Check(note.Text)
 	if err == spellcheck.ErrYandexTooBigText {
 		http.Error(w, makeJsonError(err.Error()), http.StatusRequestEntityTooLarge)
 		return
@@ -107,12 +111,17 @@ func (s *Server) handlePostNote(w http.ResponseWriter, r *http.Request, userId u
 		return
 	}
 
-	if len(result) > 0 {
+	if len(checkData) > 0 {
 		// Bad text
+		body, err := makeMisspellErrorBytes("spelling mistakes found", checkData)
+		if err != nil {
+			http.Error(w, makeJsonError("error while parsing spallchecker data"), http.StatusInternalServerError)
+			return
+		}
 		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(&result)
+		w.Write(body)
 		return
-	} else if len(result) == 0 {
+	} else if len(checkData) == 0 {
 		// Good text
 		err = s.db.PostNote(userId, note)
 		if err != nil {

@@ -42,7 +42,7 @@ func NewYandexSpeller() *YandexSpeller {
 func (y *YandexSpeller) Check(text string) (CheckResponse, error) {
 
         if len(text) >= 10_000 {
-                return nil, ErrYandexTooBigText
+                return CheckResponse{}, ErrYandexTooBigText
         }
 
         formData := url.Values{}
@@ -50,19 +50,19 @@ func (y *YandexSpeller) Check(text string) (CheckResponse, error) {
 
         resp, err := fetchCheckData(formData)
         if err != nil {
-                return nil, err
+                return CheckResponse{}, err
         }
 
         data, err := io.ReadAll(resp.Body)
         if err != nil {
-                return nil, err
+                return CheckResponse{}, err
         }
 
         var checkResponse CheckResponse
 
         err = json.Unmarshal(data, &checkResponse)
         if err != nil {
-                return nil, err
+                return CheckResponse{}, err
         }
 
         return checkResponse, nil
