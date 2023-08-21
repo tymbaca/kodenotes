@@ -25,8 +25,8 @@ const (
 )
 
 var (
-	db  = mustSetupPostgres()
-        server = mustSetupServer()
+	db          = mustSetupDB()
+	server      = mustSetupServer()
 	defUsername = "username"
 	defPassword = "password"
 )
@@ -37,7 +37,7 @@ func TestMain(m *testing.M) {
 }
 
 func TestRegister(t *testing.T) {
-	mustClearDb(db)
+	db = mustSetupDB()
 
 	// Register
 	rr := testRegister(defUsername, defPassword, http.MethodPost)
@@ -77,7 +77,8 @@ func TestRegister(t *testing.T) {
 }
 
 func TestPostNote(t *testing.T) {
-	mustClearDb(db)
+	db = mustSetupDB()
+
 	text := `This is my text`
 	textRus := `Этом мой текст`
 	bigTest := url.QueryEscape(`Liberty is the state of being free within society from oppressive restrictions imposed by authority on one’s way of life, behavior, or political views.[1]
@@ -120,7 +121,8 @@ func TestPostNote(t *testing.T) {
 }
 
 func TestPostNoteMistakesEng(t *testing.T) {
-	mustClearDb(db)
+	db = mustSetupDB()
+
 	text := `This is mi textr`
 
 	mustAddUserReturnId(defUsername, defPassword)
@@ -140,7 +142,7 @@ func TestPostNoteMistakesEng(t *testing.T) {
 }
 
 func TestPostNoteMistakesBigEng(t *testing.T) {
-	mustClearDb(db)
+	db = mustSetupDB()
 
 	mustAddUserReturnId(defUsername, defPassword)
 	if mustCountTable(usersTable) != 1 {
@@ -167,7 +169,7 @@ func TestPostNoteMistakesBigEng(t *testing.T) {
 }
 
 func TestPostNoteMistakesRus(t *testing.T) {
-	mustClearDb(db)
+	db = mustSetupDB()
 
 	textRus := `Этом мрй тккст`
 
@@ -185,7 +187,7 @@ func TestPostNoteMistakesRus(t *testing.T) {
 }
 
 func TestPostNoteMistakesBigRus(t *testing.T) {
-	mustClearDb(db)
+	db = mustSetupDB()
 
 	bigTextRus := url.QueryEscape(`В этм теусте очен мгого ошибак. Существует множество различных определений свободы[⇨]. В этике понимание свободы связано с наличием свободы воли человека.
 
@@ -210,7 +212,8 @@ func TestPostNoteMistakesBigRus(t *testing.T) {
 }
 
 func TestGetNotes(t *testing.T) {
-	mustClearDb(db)
+	db = mustSetupDB()
+
 	userId := mustAddUserReturnId(defUsername, defPassword)
 	if mustCountTable(usersTable) != 1 {
 		t.Error("user not imported in database")
@@ -312,10 +315,27 @@ func parseGetNotes(t *testing.T, resp *httptest.ResponseRecorder) database.NoteG
 	return result
 }
 
-func mustSetupServer() (*Server, *database.PostgresDatabase) {
+func mustSetupDB() *database.PostgresDatabase {
+	pgHost := util.MustGetenv(pgHostEnvVar)
+	pgPassword := util.MustGetenv(pgPasswordEnvVar)
+	db, err := database.NewPostgresDatabase(pgHost, pgPassword)
+	if err != nil {
+		panic(err)
+	}
+	mustClearDb(db)
+	err = db.Init()
+	if err != nil {
+		panic(err)
+	}
+	return db
 }
 
-func mustSetupPostgres() (*Server, *database.PostgresDatabase) {
+func mustSetupServer() *Server {
+	serverPort := util.MustGetenv(serverPortEnvVar)
+	postgres := db
+	yandexSpeller := spellcheck.NewYandexSpeller()
+	server := NewServer(":"+serverPort, postgres, yandexSpeller)
+	return server
 }
 
 func mustCountTable(table string) int {
@@ -363,7 +383,7 @@ func mustAddNoteReturnId(user_id uuid.UUID, text string) uuid.UUID {
 }
 
 func mustDropDb(db *database.PostgresDatabase) {
-        _, err := db.Exec(`
+	_, err := db.Exec(`
                 DROP SCHEMA public CASCADE;
                 CREATE SCHEMA public;
                 GRANT ALL ON SCHEMA public TO postgres;
@@ -376,24 +396,16 @@ func mustDropDb(db *database.PostgresDatabase) {
 }
 
 func mustClearDb(db *database.PostgresDatabase) {
-        _, err := db.Exec(`
+	_, err := db.Exec(`
                 DROP SCHEMA public CASCADE;
                 CREATE SCHEMA public;
                 GRANT ALL ON SCHEMA public TO postgres;
                 GRANT ALL ON SCHEMA public TO public;
                 COMMENT ON SCHEMA public IS 'standard public schema';
-        `)
+	`)
 	if err != nil {
 		panic(err)
 	}
-        db.Init()
-        if err != nil {
-                panic(err)
-        }
-	// _, err := db.Exec(`TRUNCATE TABLE "notes", "users";`)
-	// if err != nil {
-	// 	panic(err)
-	// }
 }
 
 func truncateTableDb(db *database.PostgresDatabase, table string) {

@@ -168,7 +168,7 @@ func TestGetAllNotes(t *testing.T) {
 
 func mustSetupCleanDb() *PostgresDatabase {
 	mustClearDb()
-	// FOREPLAY
+
 	db, err := NewPostgresDatabase(host, password)
 	if err != nil {
 		panic(err)
