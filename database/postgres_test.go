@@ -6,20 +6,22 @@ import (
 
 	"github.com/google/uuid"
 	_ "github.com/lib/pq"
+	"github.com/tymbaca/kodenotes/util"
+)
+
+const (
+	pgHostEnvVar     = "POSTGRES_HOST"
+	pgPasswordEnvVar = "POSTGRES_PASSWORD"
 )
 
 var (
+	db       = mustSetupDB()
 	host     = os.Getenv("POSTGRES_HOST")
 	password = os.Getenv("POSTGRES_PASSWORD")
 )
 
-func TestMain(m *testing.M) {
-	mustClearDb()
-	m.Run()
-}
-
 func TestReqisterUser(t *testing.T) {
-	db := mustSetupCleanDb()
+	db = mustSetupDB()
 
 	semenId, err := db.RegisterUser(UserSecureCredentials{Username: "Semen", Password: "hashedpasswd"})
 	if err != nil || mustCountTable(db, "users") != 1 {
@@ -52,7 +54,7 @@ func TestReqisterUser(t *testing.T) {
 }
 
 func TestPostNotes(t *testing.T) {
-	db := mustSetupCleanDb()
+	db = mustSetupDB()
 
 	userId := mustAddUserReturnId(db, "Semen", "hashedpasswd")
 	if mustCountTable(db, "users") != 1 {
@@ -95,7 +97,7 @@ func TestPostNotes(t *testing.T) {
 }
 
 func TestGetAllNotes(t *testing.T) {
-	db := mustSetupCleanDb()
+	db = mustSetupDB()
 
 	semenId := mustAddUserReturnId(db, "Semen", "hashedpasswd")
 	// Added 3 notes
@@ -166,20 +168,17 @@ func TestGetAllNotes(t *testing.T) {
 
 // }
 
-func mustSetupCleanDb() *PostgresDatabase {
-	mustClearDb()
-
-	db, err := NewPostgresDatabase(host, password)
+func mustSetupDB() *PostgresDatabase {
+	pgHost := util.MustGetenv(pgHostEnvVar)
+	pgPassword := util.MustGetenv(pgPasswordEnvVar)
+	db, err := NewPostgresDatabase(pgHost, pgPassword)
 	if err != nil {
 		panic(err)
 	}
+	mustClearDb(db)
 	err = db.Init()
 	if err != nil {
 		panic(err)
-	}
-
-	if mustCountTable(db, "users") != 0 || mustCountTable(db, "notes") != 0 {
-		panic("tables are not clean")
 	}
 	return db
 }
@@ -226,13 +225,8 @@ func mustAddNoteReturnId(db *PostgresDatabase, user_id uuid.UUID, note NoteCreat
 	return id
 }
 
-func mustClearDb() {
-	db, err := NewPostgresDatabase(host, password)
-	if err != nil {
-		panic(err)
-	}
-
-	_, err = db.Exec(`
+func mustClearDb(db *PostgresDatabase) {
+	_, err := db.Exec(`
                 DROP SCHEMA public CASCADE;
                 CREATE SCHEMA public;
                 GRANT ALL ON SCHEMA public TO postgres;
