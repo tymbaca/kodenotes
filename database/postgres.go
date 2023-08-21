@@ -68,18 +68,15 @@ func (d *PostgresDatabase) Init() error {
 }
 
 func (d *PostgresDatabase) addUuidExtension() error {
-	query := `CREATE EXTENSION IF NOT EXISTS "uuid-ossp";`
-
-	res, err := d.Exec(query)
+	_, err := d.Exec(`DROP EXTENSION IF EXISTS "uuid-ossp";`)
 	if err != nil {
 		return err
 	}
-	_ = res
+	_, err = d.Exec(`CREATE EXTENSION "uuid-ossp";`)
+	if err != nil {
+		return err
+	}
 	return nil
-}
-
-func (d *PostgresDatabase) ensureAddUuidExtension() error {
-
 }
 
 // createUsersTable creates users table in PostgreSQL.
@@ -103,6 +100,26 @@ func (d *PostgresDatabase) createUsersTable() error {
 
 func (d *PostgresDatabase) MaxCredsLength() int {
 	return 250
+}
+
+// createNotesTable creates notes table in PostgreSQL.
+// DEPENDS on d.addUuidExtension and d.createUsersTable.
+func (d *PostgresDatabase) createNotesTable() error {
+	query := `
+        CREATE TABLE IF NOT EXISTS notes (
+                id      UUID DEFAULT uuid_generate_v4(),
+                user_id UUID,
+                text    TEXT,
+
+                PRIMARY KEY (id),
+                CONSTRAINT fk_note_user FOREIGN KEY (user_id) REFERENCES "users"(id)
+        );`
+
+	_, err := d.Exec(query)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // func (d *PostgresDatabase) CreateUser(username, password string) error {}
@@ -142,24 +159,6 @@ func (d *PostgresDatabase) GetUserIdIfAuthorized(creds UserSecureCredentials) uu
 	}
 }
 
-func (d *PostgresDatabase) createNotesTable() error {
-	query := `
-        CREATE TABLE IF NOT EXISTS notes (
-                id      UUID DEFAULT uuid_generate_v1(),
-                user_id UUID,
-                text    TEXT,
-
-                PRIMARY KEY (id),
-                CONSTRAINT fk_note_user FOREIGN KEY (user_id) REFERENCES "users"(id)
-        );`
-
-	_, err := d.Exec(query)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
 func (d *PostgresDatabase) GetNotes(userId uuid.UUID) (NoteGetAll, error) {
 	var result NoteGetAll
 
@@ -194,6 +193,6 @@ func (d *PostgresDatabase) PostNote(userId uuid.UUID, note NoteCreate) error {
 		log.Error("PG: cannot insert note for user id: '%s', error: %s", userId.String(), err.Error())
 		return err
 	}
-	log.Error("PG: inserted note for user id: '%s'", userId.String())
+	log.Info("PG: inserted note for user id: '%s'", userId.String())
 	return nil
 }

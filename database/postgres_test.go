@@ -233,8 +233,11 @@ func mustClearDb() {
 	}
 
 	_, err = db.Exec(`
-		DROP SCHEMA public CASCADE;
-		CREATE SCHEMA public;
+                DROP SCHEMA public CASCADE;
+                CREATE SCHEMA public;
+                GRANT ALL ON SCHEMA public TO postgres;
+                GRANT ALL ON SCHEMA public TO public;
+                COMMENT ON SCHEMA public IS 'standard public schema';
 	`)
 	if err != nil {
 		panic(err)

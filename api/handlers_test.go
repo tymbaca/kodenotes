@@ -321,6 +321,7 @@ func mustSetupServerAndDb() (*Server, *database.PostgresDatabase) {
 	if err != nil {
 		panic(err)
 	}
+        mustDropDb(postgres)
 	err = postgres.Init()
 	if err != nil {
 		panic(err)
@@ -376,11 +377,38 @@ func mustAddNoteReturnId(user_id uuid.UUID, text string) uuid.UUID {
 	return id
 }
 
-func mustClearDb(db *database.PostgresDatabase) {
-	_, err := db.Exec(`TRUNCATE TABLE notes, users;`)
+func mustDropDb(db *database.PostgresDatabase) {
+        _, err := db.Exec(`
+                DROP SCHEMA public CASCADE;
+                CREATE SCHEMA public;
+                GRANT ALL ON SCHEMA public TO postgres;
+                GRANT ALL ON SCHEMA public TO public;
+                COMMENT ON SCHEMA public IS 'standard public schema';
+        `)
 	if err != nil {
 		panic(err)
 	}
+}
+
+func mustClearDb(db *database.PostgresDatabase) {
+        _, err := db.Exec(`
+                DROP SCHEMA public CASCADE;
+                CREATE SCHEMA public;
+                GRANT ALL ON SCHEMA public TO postgres;
+                GRANT ALL ON SCHEMA public TO public;
+                COMMENT ON SCHEMA public IS 'standard public schema';
+        `)
+	if err != nil {
+		panic(err)
+	}
+        db.Init()
+        if err != nil {
+                panic(err)
+        }
+	// _, err := db.Exec(`TRUNCATE TABLE "notes", "users";`)
+	// if err != nil {
+	// 	panic(err)
+	// }
 }
 
 func truncateTableDb(db *database.PostgresDatabase, table string) {
