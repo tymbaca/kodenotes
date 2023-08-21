@@ -25,7 +25,8 @@ const (
 )
 
 var (
-	server, db  = mustSetupServerAndDb()
+	db  = mustSetupPostgres()
+        server = mustSetupServer()
 	defUsername = "username"
 	defPassword = "password"
 )
@@ -311,26 +312,10 @@ func parseGetNotes(t *testing.T, resp *httptest.ResponseRecorder) database.NoteG
 	return result
 }
 
-func mustSetupServerAndDb() (*Server, *database.PostgresDatabase) {
-	serverPort := util.MustGetenv(serverPortEnvVar)
+func mustSetupServer() (*Server, *database.PostgresDatabase) {
+}
 
-	pgHost := util.MustGetenv(pgHostEnvVar)
-	pgPassword := util.MustGetenv(pgPasswordEnvVar)
-
-	postgres, err := database.NewPostgresDatabase(pgHost, pgPassword)
-	if err != nil {
-		panic(err)
-	}
-        mustDropDb(postgres)
-	err = postgres.Init()
-	if err != nil {
-		panic(err)
-	}
-
-	yandexSpeller := spellcheck.NewYandexSpeller()
-	server := NewServer(":"+serverPort, postgres, yandexSpeller)
-	go server.Start()
-	return server, postgres
+func mustSetupPostgres() (*Server, *database.PostgresDatabase) {
 }
 
 func mustCountTable(table string) int {
