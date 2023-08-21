@@ -6,7 +6,8 @@ run:
 test: 
 	set -o allexport && . ./.env && set +o allexport &&\
 	export POSTGRES_HOST=localhost &&\
-	go test ./... -count=1
+	go clean -testcache &&\
+	go test -p 1 ./... 
 
 pg-up:
 	set -o allexport && . ./.env && set +o allexport &&\
