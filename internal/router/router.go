@@ -9,7 +9,7 @@ import (
 type Middleware func(next http.HandlerFunc) http.HandlerFunc
 
 type Router struct {
-	routes map[string]Route
+	routes map[string]*Route
 
 	// Middlewares for all requests. Executes before routesMiddlewares
 	//
@@ -25,19 +25,26 @@ type Router struct {
 
 func Default() *Router {
 	return &Router{
-		routes:            nil,
+		routes:            map[string]*Route{},
 		globalMiddlewares: []Middleware{Logger},
 	}
 }
 
 func New(middlewares ...Middleware) *Router {
 	return &Router{
-		routes:            nil,
+		routes:            map[string]*Route{},
 		globalMiddlewares: middlewares, // TODO: in which order thay will be used?
 	}
 }
 
-func Run(addr string) error
+func (r *Router) Run(addr string) error {
+	mux := http.NewServeMux()
+	for pattern, route := range r.routes {
+		mux.HandleFunc(pattern, route.GetHandlerFunc())
+	}
+
+	return http.ListenAndServe(addr, mux)
+}
 
 func (r *Router) Handle(method, pattern string, handler http.HandlerFunc) {
 	route, ok := r.routes[pattern]
@@ -93,8 +100,8 @@ type Route struct {
 	middlewares []Middleware
 }
 
-func NewRoute() Route {
-	return Route{
+func NewRoute() *Route {
+	return &Route{
 		handlers:    map[string]http.HandlerFunc{},
 		middlewares: []Middleware{},
 	}
@@ -102,11 +109,13 @@ func NewRoute() Route {
 
 func (rt *Route) getHandlerWithMethod() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		// Get corresponding handler if exists
 		handler, ok := rt.handlers[r.Method]
-		if !ok {
+		if ok {
+			handler(w, r)
+		} else {
 			http.Error(w, `"detail": "method not allowed"`, http.StatusMethodNotAllowed)
 		}
-		handler(w, r)
 	}
 }
 
@@ -145,14 +154,17 @@ func example() {
 
 	router := New(Logger)
 
-	// Set global middleware
-	router.Use(timeRecorder)
-
+	// Set new routes
 	router.Get("/posts", getHandler)
 	router.Post("/posts", postHandler)
 
-	// Set middleware for "/posts" pattern
-	router.UseLocal("/posts", authorize) // WARN: what about '/posts/my' request? is will ignore it
+	// Set global middleware
+	router.Use(timeRecorder)
 
-	log.Fatal(Run(":8080"))
+	// Set middleware for "/posts" pattern
+	router.UseLocal("/posts", authorize)
+	// WARN: what about '/posts/my' request? is will ignore it
+	// It can be solved with http.ServeMux.
+
+	log.Fatal(router.Run(":8080"))
 }
