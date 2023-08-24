@@ -26,21 +26,28 @@ type Router struct {
 func Default() *Router {
 	return &Router{
 		routes:            map[string]*Route{},
-		globalMiddlewares: []Middleware{Logger},
+		globalMiddlewares: []Middleware{Recover, Logger},
 	}
 }
 
 func New(middlewares ...Middleware) *Router {
 	return &Router{
 		routes:            map[string]*Route{},
-		globalMiddlewares: middlewares, // TODO: in which order thay will be used?
+		globalMiddlewares: middlewares,
 	}
 }
 
 func (r *Router) Run(addr string) error {
 	mux := http.NewServeMux()
 	for pattern, route := range r.routes {
-		mux.HandleFunc(pattern, route.GetHandlerFunc())
+		handler := route.GetHandlerFunc()
+		for _, middleware := range r.localMiddlewaresMap[pattern] {
+			handler = middleware(handler)
+		}
+		for _, middleware := range r.globalMiddlewares {
+			handler = middleware(handler)
+		}
+		mux.HandleFunc(pattern, handler)
 	}
 
 	return http.ListenAndServe(addr, mux)
@@ -121,9 +128,6 @@ func (rt *Route) getHandlerWithMethod() http.HandlerFunc {
 
 func (rt *Route) GetHandlerFunc() http.HandlerFunc {
 	handler := rt.getHandlerWithMethod()
-	for _, middleware := range rt.middlewares {
-		handler = middleware(handler)
-	}
 	return handler
 }
 

@@ -3,6 +3,7 @@ package router
 import (
 	"log"
 	"net/http"
+	"time"
 )
 
 // LogResponseWriter is a wrapper for statndart http.ResponseWriter with
@@ -36,8 +37,41 @@ func (lrw *LogResponseWriter) WriteHeader(statusCode int) {
 func Logger(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		lrw := NewLogResponseWriter(w)
+		startTime := time.Now()
+
 		next(lrw, r)
-		w.Header().Get("")
-		log.Printf("Request handled: | %s\t| %s\t|X| %d", r.URL, r.Method, lrw.StatusCode)
+
+		endTime := time.Now()
+		duration := endTime.Sub(startTime)
+		log.Printf(
+			"Request handled: | %s \t| %s \t|X| %d \t| %s",
+			r.URL, r.Method, lrw.StatusCode, duration.String(),
+		)
+	}
+}
+
+// WARN: doesnt work
+func Recover(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		defer func() {
+			p := recover()
+			if p != nil {
+				w.WriteHeader(http.StatusInternalServerError)
+			}
+		}()
+		next(w, r)
+	}
+}
+
+// Doesn't work currently
+func Duration(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		startTime := time.Now()
+
+		next(w, r)
+
+		endTime := time.Now()
+		duration := startTime.Sub(endTime)
+		w.Header().Set("X-Duration", duration.String())
 	}
 }
